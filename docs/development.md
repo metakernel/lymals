@@ -22,3 +22,23 @@
 - `luma` remains optional and feature-gated because v1 stays parse-only by default, with upstream integration behind the local syntax facade.
 - `miette` remains in the crate for rich human-facing diagnostics/CLI error presentation even though it was not part of the narrower preferred set.
 - We intentionally do **not** add a direct `dashmap` dependency yet; `parking_lot` covers the current root-bounded workspace/document-state plan with less API commitment.
+
+## Common commands
+
+```text
+cargo fmt --all --check
+cargo test
+cargo test --all-features
+cargo test --test lsp_harness
+cargo bench --bench parse_index
+cargo doc --workspace --all-features --no-deps
+```
+
+Use `UPDATE_GOLDENS=1 cargo test --test parser_tests` only when intentionally refreshing parser golden fixtures.
+
+## Architecture notes
+
+- `tower-lsp` owns protocol dispatch in `src/server.rs`; feature-specific request logic lives under `src/handlers/`.
+- Feature engines consume local parser/syntax/semantic facades rather than raw upstream AST types.
+- `src/imports.rs` and `src/workspace.rs` enforce resolver containment and workspace limits.
+- `src/eval.rs` is a fail-closed placeholder; do not call it from shipped editor features for v1.

@@ -21,6 +21,9 @@ All built-in commands are parse-only and return data without executing Lua or mu
 - `lumals.explainDiagnostic`
   - Arguments: `[{ "code": "L003" }]` or `["L003"]`
   - Returns a short explanation and remediation for a known diagnostic code.
+- `lumals.serverStatus`
+  - Arguments: none
+  - Returns lifecycle, trace, log-level, workspace, open-document, and watcher invalidation status for troubleshooting.
 
 ## Safety rules
 
