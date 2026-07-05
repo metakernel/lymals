@@ -71,3 +71,12 @@ Stable syntax/data types exposed by `luma::syntax` / `luma_parser` re-exports:
 - **Go** for using upstream Luma as a backend dependency for parsing, lexing, diagnostics, spans, and whole-document formatting.
 - **No-go** for building the language server directly on raw upstream APIs alone.
 - Recommended architecture: keep upstream behind a local `lumals` syntax facade and supplemental scanner/indexing layer, so v1 stays parse-only and future backend swaps or upstream API changes remain localized.
+
+## Local conformance coverage
+
+`tests/fixtures/conformance/` recreates representative public Luma syntax categories without copying upstream fixtures. Current status:
+
+- Core directives, lets, mappings, sequences, scalars, block strings, and Lua-expression syntax: **pass** in parse-only mode.
+- Multi-document files with schema/include directives: **pass** syntactically; resolver behavior stays local/root-bounded.
+- Unsafe import/include policy cases and indentation/duplicate-key validations: **expected diagnostics**.
+- Evaluation-dependent Lua runtime behavior: **intentionally unsupported** in v1; syntax parses but no Lua executes.

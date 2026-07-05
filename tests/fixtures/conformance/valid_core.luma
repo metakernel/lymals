@@ -1,0 +1,14 @@
+@luma 1
+@profile dev
+let region = ${env.REGION}
+service:
+  name: "api"
+  enabled: true
+  retries: 3
+  tags:
+    - web
+    - public
+  description: |
+    line one
+    line two
+  computed: ${region}

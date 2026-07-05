@@ -1,0 +1,5 @@
+@lua sandboxed_future_runtime
+let runtimeValue = ${os.getenv("HOME")}
+result:
+  value: ${runtimeValue}
+  script: lua{return runtimeValue}
