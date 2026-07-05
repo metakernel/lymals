@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.archive }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            archive: lumals-linux-x86_64
+            binary: lumals
+          - os: macos-latest
+            archive: lumals-macos-aarch64
+            binary: lumals
+          - os: windows-latest
+            archive: lumals-windows-x86_64
+            binary: lumals.exe
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binary
+        run: cargo build --release --bin lumals
+
+      - name: Stage binary
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path dist/${{ matrix.archive }} | Out-Null
+          Copy-Item target/release/${{ matrix.binary }} dist/${{ matrix.archive }}/
+          Copy-Item README.md,CHANGELOG.md,LICENSE.md dist/${{ matrix.archive }}/
+
+      - name: Create archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path dist/${{ matrix.archive }}/* -DestinationPath dist/${{ matrix.archive }}.zip
+
+      - name: Create archive (Unix)
+        if: runner.os != 'Windows'
+        run: tar -C dist -czf dist/${{ matrix.archive }}.tar.gz ${{ matrix.archive }}
+
+      - name: Create checksums
+        shell: pwsh
+        run: |
+          $archives = Get-ChildItem dist -File | Where-Object { $_.Name -like '*.zip' -or $_.Name -like '*.tar.gz' }
+          foreach ($archive in $archives) {
+            $hash = (Get-FileHash -Algorithm SHA256 $archive.FullName).Hash.ToLowerInvariant()
+            "$hash  $($archive.Name)" | Set-Content -NoNewline -Path "$($archive.FullName).sha256"
+          }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.archive }}
+          path: |
+            dist/${{ matrix.archive }}.*
+
+      - name: Publish GitHub release assets
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/${{ matrix.archive }}.*
