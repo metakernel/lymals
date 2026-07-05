@@ -65,3 +65,7 @@ Print the generated JSON schema with:
 ```text
 lumals --print-config-schema
 ```
+
+## Evaluation setting
+
+`evaluation.enabled` is reserved for future work. In v1, both `false` and `true` keep the server fail-closed: no Lua evaluation path is reachable from shipped LSP features.
