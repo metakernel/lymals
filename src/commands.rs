@@ -82,15 +82,9 @@ pub fn parse_uri_argument(command: Command, arguments: &[Value]) -> Result<Url, 
 
     let uri = match argument {
         Value::String(uri) => uri.as_str(),
-        Value::Object(object) => object
-            .get("uri")
-            .and_then(Value::as_str)
-            .ok_or_else(|| {
-                Error::invalid_params(format!(
-                    "{} expects a single uri argument",
-                    command.name()
-                ))
-            })?,
+        Value::Object(object) => object.get("uri").and_then(Value::as_str).ok_or_else(|| {
+            Error::invalid_params(format!("{} expects a single uri argument", command.name()))
+        })?,
         _ => {
             return Err(Error::invalid_params(format!(
                 "{} expects a single uri argument",
@@ -117,14 +111,11 @@ pub fn parse_diagnostic_code_argument(arguments: &[Value]) -> Result<String, Err
 
     let code = match argument {
         Value::String(code) => code.as_str(),
-        Value::Object(object) => object
-            .get("code")
-            .and_then(Value::as_str)
-            .ok_or_else(|| {
-                Error::invalid_params(
-                    "lumals.explainDiagnostic expects a single diagnostic code argument",
-                )
-            })?,
+        Value::Object(object) => object.get("code").and_then(Value::as_str).ok_or_else(|| {
+            Error::invalid_params(
+                "lumals.explainDiagnostic expects a single diagnostic code argument",
+            )
+        })?,
         _ => {
             return Err(Error::invalid_params(
                 "lumals.explainDiagnostic expects a single diagnostic code argument",
@@ -142,7 +133,10 @@ pub fn parse_diagnostic_code_argument(arguments: &[Value]) -> Result<String, Err
 
 pub fn diagnostic_explanation(code: &str) -> Option<(&'static str, &'static str)> {
     Some(match code {
-        "L001" => ("NUL byte", "Remove embedded NUL bytes from the source file."),
+        "L001" => (
+            "NUL byte",
+            "Remove embedded NUL bytes from the source file.",
+        ),
         "L002" => (
             "Duplicate mapping key",
             "Rename or remove the later key so each mapping key is unique.",
@@ -163,7 +157,10 @@ pub fn diagnostic_explanation(code: &str) -> Option<(&'static str, &'static str)
             "Unmatched indentation",
             "Dedent to a previously established indentation level.",
         ),
-        "L007" => ("Malformed directive", "Use @name with an ASCII alphanumeric directive name."),
+        "L007" => (
+            "Malformed directive",
+            "Use @name with an ASCII alphanumeric directive name.",
+        ),
         "L008" => (
             "Missing import target",
             "Provide a relative path or file: URI after the directive.",
@@ -203,6 +200,30 @@ pub fn diagnostic_explanation(code: &str) -> Option<(&'static str, &'static str)
         "L017" => (
             "Unterminated fenced lua block",
             "Add a closing ``` fence for the lua block.",
+        ),
+        "L019" => (
+            "Missing import/include target",
+            "Create the referenced local .luma file or update the directive path.",
+        ),
+        "L020" => (
+            "Import/include target too large",
+            "Reduce the file size or raise maxIndexedFileBytes for trusted workspaces.",
+        ),
+        "L021" => (
+            "Import/include cycle",
+            "Break the cycle between imported or included .luma files.",
+        ),
+        "L022" => (
+            "Invalid import/include target",
+            "Use a valid relative path or file: URI rooted in the workspace.",
+        ),
+        "L023" => (
+            "Import/include depth limit",
+            "Shorten the import chain or raise maxResolveDepth for trusted workspaces.",
+        ),
+        "L024" => (
+            "Import/include edge limit",
+            "Reduce import fan-out or raise maxResolvedEdgesPerFile for trusted workspaces.",
         ),
         _ => return None,
     })
@@ -253,7 +274,10 @@ mod tests {
 
     #[test]
     fn diagnostic_code_argument_validates_shape() {
-        assert_eq!(parse_diagnostic_code_argument(&[json!("L003")]).unwrap(), "L003");
+        assert_eq!(
+            parse_diagnostic_code_argument(&[json!("L003")]).unwrap(),
+            "L003"
+        );
         assert!(parse_diagnostic_code_argument(&[]).is_err());
         assert!(parse_diagnostic_code_argument(&[json!({})]).is_err());
     }
@@ -268,6 +292,9 @@ mod tests {
     fn no_argument_commands_reject_extra_arguments() {
         assert!(expect_no_arguments(Command::ShowConfig, &[json!(true)]).is_err());
         assert!(expect_no_arguments(Command::RestartIndex, &[]).is_ok());
-        assert_eq!(Command::parse(EXPLAIN_DIAGNOSTIC), Some(Command::ExplainDiagnostic));
+        assert_eq!(
+            Command::parse(EXPLAIN_DIAGNOSTIC),
+            Some(Command::ExplainDiagnostic)
+        );
     }
 }

@@ -1,13 +1,12 @@
 use tower_lsp::lsp_types::{
     ClientCapabilities, CodeActionKind, CodeActionOptions, CodeActionProviderCapability,
     CompletionOptions, DeclarationCapability, ExecuteCommandOptions,
-    FoldingRangeProviderCapability,
-    HoverProviderCapability, ImplementationProviderCapability, OneOf, PositionEncodingKind,
-    ReferencesOptions, RenameOptions, SelectionRangeProviderCapability,
-    SemanticTokensFullOptions, SemanticTokensOptions, SemanticTokensServerCapabilities,
-    ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
-    TextDocumentSyncOptions, TextDocumentSyncSaveOptions, TypeDefinitionProviderCapability,
-    WorkspaceFoldersServerCapabilities,
+    FoldingRangeProviderCapability, HoverProviderCapability, ImplementationProviderCapability,
+    OneOf, PositionEncodingKind, ReferencesOptions, RenameOptions,
+    SelectionRangeProviderCapability, SemanticTokensFullOptions, SemanticTokensOptions,
+    SemanticTokensServerCapabilities, ServerCapabilities, TextDocumentSyncCapability,
+    TextDocumentSyncKind, TextDocumentSyncOptions, TextDocumentSyncSaveOptions,
+    TypeDefinitionProviderCapability, WorkspaceFoldersServerCapabilities,
     WorkspaceServerCapabilities,
 };
 

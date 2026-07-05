@@ -168,7 +168,13 @@ fn path_relative_to_any_root(
     workspace_folders: &[WorkspaceFolder],
     config: &LumalsConfig,
 ) -> Option<PathBuf> {
-    for root in effective_roots(workspace_folders, config) {
+    let mut roots = effective_roots(workspace_folders, config);
+    roots.extend(
+        workspace_folders
+            .iter()
+            .filter_map(|folder| file_url_to_path(&folder.uri)),
+    );
+    for root in roots {
         if let Ok(relative) = path.strip_prefix(&root) {
             return Some(relative.to_path_buf());
         }

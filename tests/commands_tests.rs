@@ -19,10 +19,22 @@ async fn execute_command_provider_registers_safe_commands() {
         .unwrap();
 
     assert!(commands.iter().any(|value| value == "lumals.restartIndex"));
-    assert!(commands.iter().any(|value| value == "lumals.showSyntaxTree"));
+    assert!(
+        commands
+            .iter()
+            .any(|value| value == "lumals.showSyntaxTree")
+    );
     assert!(commands.iter().any(|value| value == "lumals.showConfig"));
-    assert!(commands.iter().any(|value| value == "lumals.formatWorkspaceFile"));
-    assert!(commands.iter().any(|value| value == "lumals.explainDiagnostic"));
+    assert!(
+        commands
+            .iter()
+            .any(|value| value == "lumals.formatWorkspaceFile")
+    );
+    assert!(
+        commands
+            .iter()
+            .any(|value| value == "lumals.explainDiagnostic")
+    );
 
     initialized(&mut writer, &mut reader).await;
     shutdown_server(&mut writer, &mut reader, server_task).await;
@@ -37,15 +49,22 @@ async fn execute_command_validates_arguments_and_returns_safe_errors() {
     initialize(&mut writer, &mut reader, workspace.path()).await;
     initialized(&mut writer, &mut reader).await;
 
-    let missing_uri = execute_command(&mut writer, &mut reader, 2, "lumals.showSyntaxTree", json!([])).await;
+    let missing_uri = execute_command(
+        &mut writer,
+        &mut reader,
+        2,
+        "lumals.showSyntaxTree",
+        json!([]),
+    )
+    .await;
     assert_eq!(missing_uri["error"]["code"], -32602);
     assert_eq!(
         missing_uri["error"]["message"],
         "lumals.showSyntaxTree expects a single uri argument"
     );
 
-    let outside_uri = tower_lsp::lsp_types::Url::from_file_path(outside.path().join("escape.luma"))
-        .unwrap();
+    let outside_uri =
+        tower_lsp::lsp_types::Url::from_file_path(outside.path().join("escape.luma")).unwrap();
     fs::write(outside.path().join("escape.luma"), "root:  bad\n").unwrap();
     let blocked = execute_command(
         &mut writer,
@@ -87,7 +106,13 @@ async fn execute_command_returns_parse_only_results() {
     initialize(&mut writer, &mut reader, workspace.path()).await;
     initialized(&mut writer, &mut reader).await;
 
-    open_doc(&mut writer, &mut reader, &uri, "@schema ./schema.json\nroot:\n  child: one\n").await;
+    open_doc(
+        &mut writer,
+        &mut reader,
+        &uri,
+        "@schema ./schema.json\nroot:\n  child: one\n",
+    )
+    .await;
 
     let syntax = execute_command(
         &mut writer,
@@ -128,7 +153,14 @@ async fn execute_command_returns_parse_only_results() {
     assert_eq!(config["result"]["command"], "lumals.showConfig");
     assert_eq!(config["result"]["parseOnly"], true);
 
-    let restart = execute_command(&mut writer, &mut reader, 6, "lumals.restartIndex", json!([])).await;
+    let restart = execute_command(
+        &mut writer,
+        &mut reader,
+        6,
+        "lumals.restartIndex",
+        json!([]),
+    )
+    .await;
     assert_eq!(restart["result"]["command"], "lumals.restartIndex");
     assert_eq!(restart["result"]["parseOnly"], true);
 

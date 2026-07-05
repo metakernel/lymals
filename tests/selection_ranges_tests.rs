@@ -37,7 +37,10 @@ async fn selection_ranges_return_nested_parent_chains() {
     .await;
 
     let initialize = read_message(&mut reader).await;
-    assert_eq!(initialize["result"]["capabilities"]["selectionRangeProvider"], true);
+    assert_eq!(
+        initialize["result"]["capabilities"]["selectionRangeProvider"],
+        true
+    );
 
     send_message(
         &mut writer,
@@ -99,8 +102,20 @@ async fn selection_ranges_return_nested_parent_chains() {
             range_json(text, span_of(text, "env")),
             range_json(text, span_of(text, "    env: prod")),
             range_json(text, span_of(text, "  config:\n    env: prod")),
-            range_json(text, span_of(text, "service:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod")),
-            range_json(text, span_of(text, "# heading comment\n@meta owner=team\n@profile dev\nservice:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod\n...")),
+            range_json(
+                text,
+                span_of(
+                    text,
+                    "service:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod"
+                )
+            ),
+            range_json(
+                text,
+                span_of(
+                    text,
+                    "# heading comment\n@meta owner=team\n@profile dev\nservice:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod\n..."
+                )
+            ),
             range_json(text, span_of(text, text)),
         ]
     );
@@ -111,8 +126,20 @@ async fn selection_ranges_return_nested_parent_chains() {
             range_json(text, span_of(text, "prod")),
             range_json(text, span_of(text, "    env: prod")),
             range_json(text, span_of(text, "  config:\n    env: prod")),
-            range_json(text, span_of(text, "service:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod")),
-            range_json(text, span_of(text, "# heading comment\n@meta owner=team\n@profile dev\nservice:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod\n...")),
+            range_json(
+                text,
+                span_of(
+                    text,
+                    "service:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod"
+                )
+            ),
+            range_json(
+                text,
+                span_of(
+                    text,
+                    "# heading comment\n@meta owner=team\n@profile dev\nservice:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod\n..."
+                )
+            ),
             range_json(text, span_of(text, text)),
         ]
     );
@@ -121,8 +148,17 @@ async fn selection_ranges_return_nested_parent_chains() {
         chain_ranges(&result[2]),
         vec![
             range_json(text, span_of(text, "# heading comment")),
-            range_json(text, span_of(text, "# heading comment\n@meta owner=team\n@profile dev")),
-            range_json(text, span_of(text, "# heading comment\n@meta owner=team\n@profile dev\nservice:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod\n...")),
+            range_json(
+                text,
+                span_of(text, "# heading comment\n@meta owner=team\n@profile dev")
+            ),
+            range_json(
+                text,
+                span_of(
+                    text,
+                    "# heading comment\n@meta owner=team\n@profile dev\nservice:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod\n..."
+                )
+            ),
             range_json(text, span_of(text, text)),
         ]
     );
@@ -131,10 +167,28 @@ async fn selection_ranges_return_nested_parent_chains() {
         chain_ranges(&result[3]),
         vec![
             range_json(text, span_of_nth(text, "line", 2)),
-            range_json(text, span_of(text, "description: |\n    line one\n    line two")),
-            range_json(text, span_of(text, "  description: |\n    line one\n    line two")),
-            range_json(text, span_of(text, "service:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod")),
-            range_json(text, span_of(text, "# heading comment\n@meta owner=team\n@profile dev\nservice:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod\n...")),
+            range_json(
+                text,
+                span_of(text, "description: |\n    line one\n    line two")
+            ),
+            range_json(
+                text,
+                span_of(text, "  description: |\n    line one\n    line two")
+            ),
+            range_json(
+                text,
+                span_of(
+                    text,
+                    "service:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod"
+                )
+            ),
+            range_json(
+                text,
+                span_of(
+                    text,
+                    "# heading comment\n@meta owner=team\n@profile dev\nservice:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod\n..."
+                )
+            ),
             range_json(text, span_of(text, text)),
         ]
     );
@@ -144,8 +198,20 @@ async fn selection_ranges_return_nested_parent_chains() {
         vec![
             range_json(text, span_of(text, "${shared}")),
             range_json(text, span_of(text, "  script: ${shared}")),
-            range_json(text, span_of(text, "service:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod")),
-            range_json(text, span_of(text, "# heading comment\n@meta owner=team\n@profile dev\nservice:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod\n...")),
+            range_json(
+                text,
+                span_of(
+                    text,
+                    "service:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod"
+                )
+            ),
+            range_json(
+                text,
+                span_of(
+                    text,
+                    "# heading comment\n@meta owner=team\n@profile dev\nservice:\n  script: ${shared}\n  description: |\n    line one\n    line two\n  config:\n    env: prod\n..."
+                )
+            ),
             range_json(text, span_of(text, text)),
         ]
     );

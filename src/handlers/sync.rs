@@ -58,9 +58,10 @@ impl LumaLanguageServer {
     }
 
     pub(super) async fn publish_document_diagnostics(&self, uri: &Url) {
+        let snapshot = self.state.snapshot();
         let Some((version, diagnostics)) = self.state.with_document_mut(uri, |document| {
             let version = document.version();
-            let diagnostics = collect_lsp_diagnostics(document);
+            let diagnostics = collect_lsp_diagnostics(document, &snapshot);
 
             (version, diagnostics)
         }) else {

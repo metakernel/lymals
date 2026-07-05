@@ -1,11 +1,12 @@
 pub mod ast;
 pub mod capabilities;
 pub mod code_actions;
-pub mod completion;
 pub mod commands;
+pub mod completion;
 pub mod config;
 pub mod diagnostics;
 pub mod document;
+pub mod eval;
 pub mod folding;
 pub mod formatting;
 pub mod hover;

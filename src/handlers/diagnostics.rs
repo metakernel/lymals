@@ -6,12 +6,46 @@ use tower_lsp::lsp_types::{
 use crate::{
     diagnostics::{self, Diagnostic, DiagnosticSeverity, DiagnosticTag},
     document::Document,
+    imports,
+    state::SessionSnapshot,
 };
 
-pub(super) fn collect_lsp_diagnostics(document: &mut Document) -> Vec<LspDiagnostic> {
+pub(super) fn collect_lsp_diagnostics(
+    document: &mut Document,
+    snapshot: &SessionSnapshot,
+) -> Vec<LspDiagnostic> {
     let parsed = document.parsed();
     let source = parsed.source.clone();
-    let diagnostics = diagnostics::collect(&parsed);
+    let mut diagnostics = diagnostics::collect(&parsed);
+    diagnostics.extend(imports::collect_resolution_diagnostics(
+        document.uri(),
+        source.as_str(),
+        document.file_id(),
+        &snapshot.workspace.folders,
+        &snapshot.config,
+    ));
+    diagnostics.sort_by(|left, right| {
+        let left_span =
+            left.primary_span
+                .unwrap_or(crate::syntax::SourceSpan::new(Default::default(), 0, 0));
+        let right_span =
+            right
+                .primary_span
+                .unwrap_or(crate::syntax::SourceSpan::new(Default::default(), 0, 0));
+        (
+            left_span.start,
+            left_span.end,
+            left.code.as_str(),
+            left.message.as_str(),
+        )
+            .cmp(&(
+                right_span.start,
+                right_span.end,
+                right.code.as_str(),
+                right.message.as_str(),
+            ))
+    });
+    diagnostics.dedup();
     diagnostics
         .iter()
         .map(|diagnostic| to_lsp_diagnostic(document, &source, diagnostic))

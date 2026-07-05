@@ -85,8 +85,7 @@ impl LumaLanguageServer {
 
     async fn execute_show_config(&self) -> Result<Value> {
         let snapshot = self.state.snapshot();
-        let config = serde_json::to_value(&snapshot.config)
-            .map_err(|_| Error::internal_error())?;
+        let config = serde_json::to_value(&snapshot.config).map_err(|_| Error::internal_error())?;
         let folders = snapshot
             .workspace
             .folders
@@ -136,9 +135,10 @@ impl LumaLanguageServer {
         require_workspace_file: bool,
     ) -> Result<(FileId, String)> {
         if !require_workspace_file {
-            if let Some(document) = self.state.with_document(uri, |document| {
-                (document.file_id(), document.text())
-            }) {
+            if let Some(document) = self
+                .state
+                .with_document(uri, |document| (document.file_id(), document.text()))
+            {
                 return Ok(document);
             }
         }
@@ -152,8 +152,8 @@ impl LumaLanguageServer {
 
         let path = workspace::file_url_to_path(uri)
             .ok_or_else(|| Error::invalid_params("workspace file URI must use the file scheme"))?;
-        let metadata =
-            fs::metadata(&path).map_err(|_| Error::invalid_params("workspace file could not be read"))?;
+        let metadata = fs::metadata(&path)
+            .map_err(|_| Error::invalid_params("workspace file could not be read"))?;
         if metadata.len() > u64::from(snapshot.config.max_indexed_file_bytes) {
             return Err(Error::invalid_params(
                 "workspace file exceeds the configured size limit",
@@ -188,7 +188,12 @@ fn render_syntax_tree(source: &SourceText, file: &ParsedFile) -> String {
         ParsedFile::Upstream(_) => {
             writeln!(&mut out, "File {}", span_label(source, file.span())).ok();
             for (index, span) in file.document_spans().iter().enumerate() {
-                writeln!(&mut out, "  Document[{index}] {}", span_label(source, *span)).ok();
+                writeln!(
+                    &mut out,
+                    "  Document[{index}] {}",
+                    span_label(source, *span)
+                )
+                .ok();
             }
         }
     }
@@ -196,7 +201,12 @@ fn render_syntax_tree(source: &SourceText, file: &ParsedFile) -> String {
     out
 }
 
-fn render_document_item(out: &mut String, source: &SourceText, item: &ast::DocumentItem, indent: usize) {
+fn render_document_item(
+    out: &mut String,
+    source: &SourceText,
+    item: &ast::DocumentItem,
+    indent: usize,
+) {
     let padding = " ".repeat(indent);
     match item {
         ast::DocumentItem::Directive(directive) => {
@@ -244,9 +254,20 @@ fn render_node(out: &mut String, source: &SourceText, node: &Node, indent: usize
             }
         }
         Node::Sequence(sequence) => {
-            writeln!(out, "{padding}Sequence {}", span_label(source, sequence.span)).ok();
+            writeln!(
+                out,
+                "{padding}Sequence {}",
+                span_label(source, sequence.span)
+            )
+            .ok();
             for item in &sequence.items {
-                writeln!(out, "{}Item {}", " ".repeat(indent + 2), span_label(source, item.span)).ok();
+                writeln!(
+                    out,
+                    "{}Item {}",
+                    " ".repeat(indent + 2),
+                    span_label(source, item.span)
+                )
+                .ok();
                 if let Some(value) = &item.value {
                     render_node(out, source, value, indent + 4);
                 }

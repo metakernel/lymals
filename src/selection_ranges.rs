@@ -50,7 +50,9 @@ pub fn collect(request: SelectionRangesRequest<'_>) -> Option<Vec<SelectionRange
     let mut ranges = Vec::with_capacity(request.params.positions.len());
 
     for position in &request.params.positions {
-        let offset = line_index.position_to_offset(source.as_str(), *position).ok()?;
+        let offset = line_index
+            .position_to_offset(source.as_str(), *position)
+            .ok()?;
         let line = line_at(&lines, offset)?;
         let mut spans = Vec::new();
 
@@ -128,7 +130,9 @@ fn collect_ancestor_blocks(
 ) {
     let mut child_indent = lines[child_index].indent;
 
-    while let Some((parent_index, parent_span)) = find_parent_block(lines, child_index, child_indent, target_end, file_id) {
+    while let Some((parent_index, parent_span)) =
+        find_parent_block(lines, child_index, child_indent, target_end, file_id)
+    {
         spans.push(parent_span);
         child_index = parent_index;
         child_indent = lines[parent_index].indent;
@@ -177,7 +181,10 @@ fn find_parent_block(
 ) -> Option<(usize, SourceSpan)> {
     for index in (0..child_index).rev() {
         let line = &lines[index];
-        if line.trimmed().is_empty() || is_document_boundary(line.trimmed()) || line.indent >= child_indent {
+        if line.trimmed().is_empty()
+            || is_document_boundary(line.trimmed())
+            || line.indent >= child_indent
+        {
             continue;
         }
 
@@ -217,7 +224,11 @@ fn mapping_line_spans(
     };
 
     let pair_span = line.span(file_id);
-    Some((contains(key_span, offset).then_some(key_span), value_span.filter(|span| contains(*span, offset)), pair_span))
+    Some((
+        contains(key_span, offset).then_some(key_span),
+        value_span.filter(|span| contains(*span, offset)),
+        pair_span,
+    ))
 }
 
 fn pair_block_span(lines: &[SourceLine<'_>], index: usize, file_id: FileId) -> Option<SourceSpan> {
@@ -340,7 +351,10 @@ fn source_lines(text: &str) -> Vec<SourceLine<'_>> {
             number: number as u32,
             start,
             end: start + text.len(),
-            indent: text.chars().take_while(|ch| *ch == ' ' || *ch == '\t').count(),
+            indent: text
+                .chars()
+                .take_while(|ch| *ch == ' ' || *ch == '\t')
+                .count(),
             text,
         });
         start += segment.len();
@@ -362,7 +376,10 @@ fn source_lines(text: &str) -> Vec<SourceLine<'_>> {
                 number,
                 start,
                 end: text.len(),
-                indent: tail.chars().take_while(|ch| *ch == ' ' || *ch == '\t').count(),
+                indent: tail
+                    .chars()
+                    .take_while(|ch| *ch == ' ' || *ch == '\t')
+                    .count(),
                 text: tail,
             });
         }
@@ -381,7 +398,8 @@ fn token_at<'a>(tokens: &'a [Token], offset: usize) -> Option<&'a Token> {
     tokens
         .iter()
         .filter(|token| {
-            !matches!(token.kind, TokenKind::LineBreak | TokenKind::EndOfFile) && contains(token.span, offset)
+            !matches!(token.kind, TokenKind::LineBreak | TokenKind::EndOfFile)
+                && contains(token.span, offset)
         })
         .min_by_key(|token| token.span.len())
 }

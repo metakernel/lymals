@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 #[path = "handlers/code_actions.rs"]
 mod code_actions;
-#[path = "handlers/completion.rs"]
-mod completion;
 #[path = "handlers/commands.rs"]
 mod commands;
+#[path = "handlers/completion.rs"]
+mod completion;
 #[path = "handlers/diagnostics.rs"]
 mod diagnostics;
 #[path = "handlers/folding.rs"]
@@ -47,11 +47,10 @@ use tower_lsp::lsp_types::{
     DidChangeWorkspaceFoldersParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
     DidSaveTextDocumentParams, DocumentFormattingParams, DocumentRangeFormattingParams,
     DocumentSymbolParams, DocumentSymbolResponse, ExecuteCommandParams, FoldingRange,
-    FoldingRangeParams,
-    GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams, InitializeParams,
-    InitializeResult, InitializedParams, InlayHint, InlayHintParams, LogTraceParams, MessageType,
-    PrepareRenameResponse, ReferenceParams, RenameParams, SelectionRange,
-    SelectionRangeParams, SemanticTokensParams, SemanticTokensResult, ServerInfo,
+    FoldingRangeParams, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams,
+    InitializeParams, InitializeResult, InitializedParams, InlayHint, InlayHintParams,
+    LogTraceParams, MessageType, PrepareRenameResponse, ReferenceParams, RenameParams,
+    SelectionRange, SelectionRangeParams, SemanticTokensParams, SemanticTokensResult, ServerInfo,
     SetTraceParams, SymbolInformation, TextEdit, TraceValue, Url, WorkspaceEdit,
     WorkspaceSymbolParams,
 };
@@ -428,7 +427,10 @@ impl LanguageServer for LumaLanguageServer {
         self.handle_selection_ranges(params).await
     }
 
-    async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<serde_json::Value>> {
+    async fn execute_command(
+        &self,
+        params: ExecuteCommandParams,
+    ) -> Result<Option<serde_json::Value>> {
         self.handle_execute_command(params).await
     }
 }
