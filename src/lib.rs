@@ -26,6 +26,7 @@ pub mod server;
 pub mod state;
 pub mod symbols;
 pub mod syntax;
+pub mod tasks;
 pub mod workspace;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
