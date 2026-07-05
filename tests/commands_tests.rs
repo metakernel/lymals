@@ -98,8 +98,8 @@ async fn execute_command_returns_parse_only_results() {
     )
     .await;
     let tree = syntax["result"]["tree"].as_str().unwrap();
-    assert!(tree.contains("Directive @schema"), "{tree}");
-    assert!(tree.contains("Mapping"), "{tree}");
+    assert!(tree.contains("File "), "{tree}");
+    assert!(tree.contains("Document[0]"), "{tree}");
 
     let explain = execute_command(
         &mut writer,
