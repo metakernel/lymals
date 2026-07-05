@@ -191,6 +191,7 @@ async fn inlay_hints_are_configurable_stable_and_quiet_by_default() {
     shutdown_server(&mut writer, &mut reader, server_task).await;
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn inlay_hints(
     writer: &mut tokio::io::DuplexStream,
     reader: &mut tokio::io::DuplexStream,

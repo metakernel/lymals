@@ -33,6 +33,7 @@ impl LspHarness {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn initialize(&mut self, root_uri: &Url) -> Value {
         self.request(
             "initialize",
@@ -66,6 +67,7 @@ impl LspHarness {
         self.read_message().await
     }
 
+    #[allow(dead_code)]
     pub async fn did_change(&mut self, uri: &Url, version: i32, text: &str) -> Value {
         self.notify(
             "textDocument/didChange",
@@ -112,6 +114,7 @@ impl LspHarness {
         }
     }
 
+    #[allow(dead_code)]
     pub fn normalize_workspace(value: Value, root_uri: &Url) -> Value {
         let rendered = serde_json::to_string(&value).expect("json should serialize");
         serde_json::from_str(&rendered.replace(root_uri.as_str(), "file:///<WORKSPACE>"))

@@ -35,6 +35,7 @@ async fn execute_command_provider_registers_safe_commands() {
             .iter()
             .any(|value| value == "lumals.explainDiagnostic")
     );
+    assert!(commands.iter().any(|value| value == "lumals.serverStatus"));
 
     initialized(&mut writer, &mut reader).await;
     shutdown_server(&mut writer, &mut reader, server_task).await;
@@ -163,6 +164,18 @@ async fn execute_command_returns_parse_only_results() {
     .await;
     assert_eq!(restart["result"]["command"], "lumals.restartIndex");
     assert_eq!(restart["result"]["parseOnly"], true);
+
+    let status = execute_command(
+        &mut writer,
+        &mut reader,
+        7,
+        "lumals.serverStatus",
+        json!([]),
+    )
+    .await;
+    assert_eq!(status["result"]["command"], "lumals.serverStatus");
+    assert_eq!(status["result"]["parseOnly"], true);
+    assert_eq!(status["result"]["openDocuments"], 1);
 
     shutdown_server(&mut writer, &mut reader, server_task).await;
 }
