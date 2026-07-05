@@ -1,0 +1,3 @@
+count: 1
+- severity=1 code=E0007 source=luma.parser range=1:0-1:6
+  message=duplicate key `answer`

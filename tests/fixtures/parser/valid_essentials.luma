@@ -1,0 +1,27 @@
+---
+@luma 1
+@import "./common.luma"
+@include "./shared.luma"
+@use "./widgets.luma"
+@meta owner=team
+# parser essentials
+let env = ${mode}
+title: "Demo"
+description: |
+  first line
+  second line
+value: =count + 1
+script: lua{ print("hi") }
+metadata: @release
+- plain
+- 42
+...items
+?if env == "prod"
+?elif env == "stage"
+?else
+*for item in items
+!Widget ${item}
+...
+---
+name: second
+...

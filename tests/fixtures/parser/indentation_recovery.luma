@@ -1,0 +1,8 @@
+---
+root:
+  child: 1
+  folded: >
+    line one
+    line two
+plain: tail
+...

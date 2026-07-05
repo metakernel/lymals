@@ -1,0 +1,3 @@
+count: 1
+- severity=1 code=L003 source=lumals.validation range=0:0-0:1
+  message=tabs in indentation are not allowed

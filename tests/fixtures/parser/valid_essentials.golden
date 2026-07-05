@@ -1,0 +1,109 @@
+documents: 2
+document 1:
+- directive @luma
+- directive @import
+- directive @include
+- directive @use
+- directive @meta
+- comment parser essentials
+- let env
+- mapping [title, description, value, script, metadata]
+- scalar String: "Demo"
+- scalar BlockString: description: |\n  first line\n  second line
+- scalar LuaExpression: =count + 1
+- scalar LuaBlock: lua{ print("hi") }
+  metadata release
+- scalar Plain: @release
+- sequence 2
+- scalar Plain: plain
+- scalar Number: 42
+- spread items
+- conditional if env == "prod"
+- conditional elif env == "stage"
+- conditional else
+- loop for item in items
+- tag Widget
+- scalar LuaExpression: ${item}
+document 2:
+- mapping [name]
+- scalar Plain: second
+symbols:
+- directive:@import
+- directive:@include
+- directive:@luma
+- directive:@meta
+- directive:@use
+- key:description
+- key:metadata
+- key:name
+- key:script
+- key:title
+- key:value
+- scalar:lua-block
+- tag:Widget
+- variable:env
+diagnostics:
+token-kinds:
+- DocumentSeparator
+- DirectiveName
+- Number
+- DirectiveName
+- String
+- DirectiveName
+- String
+- DirectiveName
+- String
+- DirectiveName
+- Identifier
+- Comment
+- KeywordLet
+- Identifier
+- Equals
+- String
+- Identifier
+- Colon
+- String
+- Identifier
+- Colon
+- BlockHeader
+- Identifier
+- Identifier
+- Identifier
+- Colon
+- Equals
+- Identifier
+- Number
+- Identifier
+- Colon
+- Identifier
+- LeftBrace
+- Identifier
+- RightBrace
+- Identifier
+- Colon
+- DirectiveName
+- Dash
+- Identifier
+- Dash
+- Number
+- Spread
+- Identifier
+- Identifier
+- Equals
+- String
+- Identifier
+- Equals
+- String
+- Identifier
+- Identifier
+- KeywordIn
+- Identifier
+- TagName
+- String
+- DocumentTerminator
+- DocumentSeparator
+- Identifier
+- Colon
+- Identifier
+- DocumentTerminator
+- EndOfFile

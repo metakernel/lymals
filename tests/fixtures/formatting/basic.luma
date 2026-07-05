@@ -1,0 +1,9 @@
+@import   "./shared.luma"   
+root:
+   child:  one  
+   list:
+     -  first  
+     - second
+script: |
+    local x = 1  
+    print(x)

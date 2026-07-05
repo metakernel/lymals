@@ -1,0 +1,9 @@
+count: 4
+- severity=1 code=E0002 source=luma.parser range=0:0-0:1
+  message=invalid indentation
+- severity=1 code=E0003 source=luma.parser range=0:0-0:1
+  message=tab used for indentation
+- severity=1 code=L003 source=lumals.validation range=0:0-0:1
+  message=tabs in indentation are not allowed
+- severity=1 code=E0002 source=luma.parser range=0:0-0:10
+  message=invalid indentation

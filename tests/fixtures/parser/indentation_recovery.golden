@@ -1,0 +1,31 @@
+documents: 1
+document 1:
+- mapping [root]
+- mapping [child, folded]
+- scalar Number: 1
+- scalar BlockString:   folded: >\n    line one\n    line two
+- mapping [plain]
+- scalar Plain: tail
+symbols:
+- key:child
+- key:folded
+- key:plain
+- key:root
+diagnostics:
+token-kinds:
+- DocumentSeparator
+- Identifier
+- Colon
+- Identifier
+- Colon
+- Number
+- Identifier
+- Colon
+- BlockHeader
+- Identifier
+- Identifier
+- Identifier
+- Colon
+- Identifier
+- DocumentTerminator
+- EndOfFile

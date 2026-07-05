@@ -1,0 +1,27 @@
+documents: 1
+document 1:
+- let broken
+- mapping [message, value, ]
+- scalar BlockString: message: |
+- sequence 1
+symbols:
+- key:
+- key:message
+- key:value
+- variable:broken
+diagnostics:
+- F001: expected '=' in let binding
+- F003: expected indented block string content
+token-kinds:
+- DocumentSeparator
+- KeywordLet
+- Identifier
+- Identifier
+- Colon
+- BlockHeader
+- Identifier
+- Colon
+- Colon
+- Dash
+- DocumentTerminator
+- EndOfFile

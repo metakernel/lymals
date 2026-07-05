@@ -1,0 +1,39 @@
+definitions:
+- DocumentRoot: document1 @ document[1] [0..3]
+- Directive: @luma @ document[1].@luma [0..10]
+  detail: 1
+- Directive: @import @ document[1].@import [11..40]
+  detail: "./shared.luma" as shared
+- Import: ./shared.luma @ document[1].@import(./shared.luma) [11..40]
+  detail: @import
+- Alias: shared @ document[1].alias(shared) [11..40]
+  detail: ./shared.luma
+- Directive: @include @ document[1].@include [41..70]
+  detail: partials/base.luma
+- Import: partials/base.luma @ document[1].@import(partials/base.luma) [41..70]
+  detail: @include
+- Let: region @ document[1].$region [71..95]
+  detail: 83..95
+- Key: services @ document[1].services [96..104]
+- Key: name @ document[1].services[0].name [110..114]
+- Key: handler @ document[1].services[0].handler [129..136]
+- Tag: lambda @ document[1].services[0].handler.!lambda [138..160]
+- Key: name @ document[1].services[1].name [161..165]
+- Key: config @ document[1].config [221..227]
+- Key: retries @ document[1].config.retries [228..235]
+symbols:
+- Document: document1
+- Directive: @luma
+- Directive: @import
+- Directive: ./shared.luma
+- Variable: shared
+- Directive: @include
+- Directive: partials/base.luma
+- Variable: region
+- MappingKey: services
+- MappingKey: name
+- MappingKey: handler
+- Tag: lambda
+- MappingKey: name
+- MappingKey: config
+- MappingKey: retries

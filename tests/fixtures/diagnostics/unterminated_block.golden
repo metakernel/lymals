@@ -1,0 +1,3 @@
+count: 1
+- severity=1 code=L016 source=lumals.validation range=0:7-0:11
+  message=unterminated lua block

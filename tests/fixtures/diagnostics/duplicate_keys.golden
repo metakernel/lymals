@@ -1,0 +1,5 @@
+count: 1
+- severity=2 code=L002 source=lumals.validation range=1:0-1:6
+  message=duplicate mapping key 'answer'\n\nline 2 shadows the earlier 'answer' entry
+  tags=1
+  related=0:0-0:6 first definition here
