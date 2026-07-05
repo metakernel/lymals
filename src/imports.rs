@@ -243,6 +243,7 @@ pub fn collect_resolution_diagnostics(
     diagnostics
 }
 
+#[allow(clippy::too_many_arguments)]
 fn ingest_document_edges(
     uri: &Url,
     text: &str,
@@ -362,8 +363,8 @@ fn ensure_path_within_roots(
         .ok()
         .map(normalize_path)
         .unwrap_or(path);
-    if roots.is_empty()
-        || roots
+    if !roots.is_empty()
+        && roots
             .iter()
             .any(|root| is_under_root(&canonical_path, root))
     {
@@ -400,7 +401,14 @@ fn canonical_existing_path(uri: &Url) -> Option<PathBuf> {
 }
 
 fn is_under_root(path: &Path, root: &Path) -> bool {
-    path.starts_with(root) || path_key(path).starts_with(&path_key(root))
+    path.starts_with(root) || path_key_is_under_root(&path_key(path), &path_key(root))
+}
+
+fn path_key_is_under_root(path: &str, root: &str) -> bool {
+    path == root
+        || path
+            .strip_prefix(root)
+            .is_some_and(|rest| rest.starts_with('/'))
 }
 
 fn path_key(path: &Path) -> String {
@@ -507,7 +515,7 @@ fn is_lexical_policy_error(error: &ImportPolicyError) -> bool {
 mod tests {
     use tower_lsp::lsp_types::{Url, WorkspaceFolder};
 
-    use super::{ImportPolicyError, resolve_guarded_import};
+    use super::{ImportPolicyError, path_key_is_under_root, resolve_guarded_import};
     use crate::config::LumalsConfig;
 
     #[test]
@@ -543,5 +551,28 @@ mod tests {
             err,
             ImportPolicyError::DisallowedScheme("https".to_string())
         );
+    }
+
+    #[test]
+    fn fails_closed_when_no_roots_are_configured() {
+        let temp = tempfile::tempdir().unwrap();
+        let base_uri = Url::from_file_path(temp.path().join("pkg/main.luma")).unwrap();
+        let err = resolve_guarded_import(&base_uri, "dep.luma", &[], &LumalsConfig::default())
+            .unwrap_err();
+
+        assert_eq!(err, ImportPolicyError::OutsideAllowedRoots);
+    }
+
+    #[test]
+    fn root_prefix_matching_requires_path_boundary() {
+        assert!(path_key_is_under_root(
+            "c:/workspace/pkg/main.luma",
+            "c:/workspace"
+        ));
+        assert!(path_key_is_under_root("c:/workspace", "c:/workspace"));
+        assert!(!path_key_is_under_root(
+            "c:/workspace-evil/main.luma",
+            "c:/workspace"
+        ));
     }
 }

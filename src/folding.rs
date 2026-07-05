@@ -74,7 +74,7 @@ pub fn collect(request: FoldingRangesRequest<'_>) -> Option<Vec<FoldingRange>> {
         if candidate.end_line <= candidate.start_line {
             continue;
         }
-        if accepted.iter().any(|existing| *existing == candidate) {
+        if accepted.contains(&candidate) {
             continue;
         }
         if accepted
@@ -423,8 +423,7 @@ fn indented_block_end(lines: &[SourceLine<'_>], index: usize) -> Option<usize> {
     let child_indent = next_child_indent(lines, index)?;
     let mut last = None;
 
-    for next in index + 1..lines.len() {
-        let line = &lines[next];
+    for (next, line) in lines.iter().enumerate().skip(index + 1) {
         let trimmed = line.trimmed();
         if is_document_boundary(trimmed) {
             break;

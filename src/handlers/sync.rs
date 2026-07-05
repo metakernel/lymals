@@ -5,6 +5,7 @@ use tower_lsp::lsp_types::{
 
 use crate::document::Document;
 use crate::position::LineIndex;
+use crate::tasks::VersionedDocumentGuard;
 
 use super::{LumaLanguageServer, diagnostics::collect_lsp_diagnostics};
 
@@ -59,17 +60,31 @@ impl LumaLanguageServer {
 
     pub(super) async fn publish_document_diagnostics(&self, uri: &Url) {
         let snapshot = self.state.snapshot();
-        let Some((version, diagnostics)) = self.state.with_document_mut(uri, |document| {
+        let Some((guard, diagnostics)) = self.state.with_document_mut(uri, |document| {
             let version = document.version();
+            let guard = VersionedDocumentGuard::new(uri.clone(), version);
             let diagnostics = collect_lsp_diagnostics(document, &snapshot);
 
-            (version, diagnostics)
+            (guard, diagnostics)
         }) else {
             return;
         };
 
+        if !guard.is_current(self.state.document_version(guard.uri())) {
+            self.trace(
+                "diagnostics result discarded",
+                Some(format!(
+                    "uri={} version={} reason=stale",
+                    guard.uri(),
+                    guard.version()
+                )),
+            )
+            .await;
+            return;
+        }
+
         self.client
-            .publish_diagnostics(uri.clone(), diagnostics, Some(version))
+            .publish_diagnostics(uri.clone(), diagnostics, Some(guard.version()))
             .await;
     }
 }

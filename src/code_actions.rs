@@ -415,7 +415,7 @@ fn organize_directives_action(document: &Document, lines: &[Line<'_>]) -> Option
         .iter()
         .map(|line| line.text)
         .collect::<Vec<_>>();
-    if sorted.iter().map(String::as_str).eq(original.into_iter()) {
+    if sorted.iter().map(String::as_str).eq(original) {
         return None;
     }
 
@@ -589,11 +589,7 @@ fn spans_overlap(left: SourceSpan, right: SourceSpan) -> bool {
 }
 
 fn directive_sort_key(line: &str) -> (usize, String) {
-    let name = line
-        .trim_start()
-        .split_whitespace()
-        .next()
-        .unwrap_or_default();
+    let name = line.split_whitespace().next().unwrap_or_default();
     let bucket = match name {
         "@luma" => 0,
         "@profile" => 1,

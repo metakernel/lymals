@@ -545,8 +545,6 @@ fn render_relative_path(path: &Path) -> String {
 
     if value.is_empty() {
         value
-    } else if value.contains('/') {
-        format!("./{value}")
     } else {
         format!("./{value}")
     }

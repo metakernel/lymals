@@ -599,27 +599,26 @@ fn source_lines(source: &SourceText) -> Vec<SourceLine<'_>> {
         start += segment.len();
     }
 
-    if source.as_str().is_empty() || source.as_str().ends_with('\n').not() {
-        if lines
+    if (source.as_str().is_empty() || source.as_str().ends_with('\n').not())
+        && lines
             .last()
             .is_none_or(|line| line.start + line.text.len() != source.as_str().len())
-        {
-            let body = &source.as_str()[start..];
-            let leading_ws = body
-                .char_indices()
-                .find_map(|(offset, ch)| (ch != ' ' && ch != '\t').then_some(offset))
-                .unwrap_or(body.len());
-            let indent = body[..leading_ws]
-                .chars()
-                .take_while(|ch| *ch == ' ')
-                .count();
-            lines.push(SourceLine {
-                start,
-                indent,
-                leading_ws,
-                text: body,
-            });
-        }
+    {
+        let body = &source.as_str()[start..];
+        let leading_ws = body
+            .char_indices()
+            .find_map(|(offset, ch)| (ch != ' ' && ch != '\t').then_some(offset))
+            .unwrap_or(body.len());
+        let indent = body[..leading_ws]
+            .chars()
+            .take_while(|ch| *ch == ' ')
+            .count();
+        lines.push(SourceLine {
+            start,
+            indent,
+            leading_ws,
+            text: body,
+        });
     }
 
     lines

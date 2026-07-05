@@ -117,7 +117,6 @@ fn collect_line_spans(
         }
         spans.push(pair_span);
         collect_ancestor_blocks(lines, line.number as usize, pair_span.end, file_id, spans);
-        return;
     }
 }
 
@@ -283,8 +282,7 @@ fn block_end_index(lines: &[SourceLine<'_>], index: usize) -> usize {
     let base_indent = lines[index].indent;
     let mut last = index;
 
-    for next in index + 1..lines.len() {
-        let line = &lines[next];
+    for (next, line) in lines.iter().enumerate().skip(index + 1) {
         let trimmed = line.trimmed();
         if is_document_boundary(trimmed) {
             break;
@@ -394,7 +392,7 @@ fn line_at<'a>(lines: &'a [SourceLine<'_>], offset: usize) -> Option<&'a SourceL
         .find(|line| offset >= line.start && offset <= line.end)
 }
 
-fn token_at<'a>(tokens: &'a [Token], offset: usize) -> Option<&'a Token> {
+fn token_at(tokens: &[Token], offset: usize) -> Option<&Token> {
     tokens
         .iter()
         .filter(|token| {

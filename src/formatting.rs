@@ -209,8 +209,8 @@ fn normalize_line(trimmed: &str) -> String {
         };
     }
 
-    if trimmed.starts_with('-') {
-        let rest = trimmed[1..].trim();
+    if let Some(rest) = trimmed.strip_prefix('-') {
+        let rest = rest.trim();
         return if rest.is_empty() {
             "-".to_owned()
         } else {

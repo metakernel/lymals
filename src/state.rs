@@ -146,6 +146,10 @@ impl SessionState {
         documents.get(uri).map(f)
     }
 
+    pub fn document_version(&self, uri: &Url) -> Option<i32> {
+        self.with_document(uri, Document::version)
+    }
+
     pub fn with_document_mut<R>(&self, uri: &Url, f: impl FnOnce(&mut Document) -> R) -> Option<R> {
         let mut documents = self.documents.write();
         documents.get_mut(uri).map(f)

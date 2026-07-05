@@ -47,6 +47,8 @@ where
         return ExitCode::SUCCESS;
     }
 
+    logging::install_panic_hook(cli.log_file.clone());
+
     if let Err(error) = logging::init_logging(cli.log_file.as_deref()) {
         let _ = writeln!(stderr, "failed to initialize logging: {error:#}");
         return ExitCode::FAILURE;

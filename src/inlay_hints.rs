@@ -233,6 +233,7 @@ fn collect_node_hints(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn push_hint(
     hints: &mut Vec<InlayHint>,
     line_index: &LineIndex,
@@ -403,7 +404,7 @@ fn key_path(source: &SourceText, entry: &MappingEntry) -> Option<String> {
         while stack.len() > 1
             && stack
                 .last()
-                .is_some_and(|(stack_indent, _)| *stack_indent >= indent + 1)
+                .is_some_and(|(stack_indent, _)| *stack_indent > indent)
         {
             stack.pop();
         }

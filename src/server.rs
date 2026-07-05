@@ -259,7 +259,6 @@ impl LanguageServer for LumaLanguageServer {
                 name: env!("CARGO_PKG_NAME").to_string(),
                 version: Some(VERSION.to_string()),
             }),
-            ..InitializeResult::default()
         })
     }
 

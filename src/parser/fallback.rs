@@ -356,7 +356,7 @@ impl<'a> Parser<'a> {
         &mut self,
         lines: &[Line],
         header_index: usize,
-        marker: char,
+        _marker: char,
     ) -> (Node, usize) {
         let header = &lines[header_index];
         let expected_indent = header.indent + 2;
@@ -387,11 +387,7 @@ impl<'a> Parser<'a> {
         let text = self.source.slice(span).unwrap_or_default().to_owned();
         (
             Node::Scalar(Scalar {
-                kind: if marker == '|' {
-                    ScalarKind::BlockString
-                } else {
-                    ScalarKind::BlockString
-                },
+                kind: ScalarKind::BlockString,
                 span,
                 text,
             }),

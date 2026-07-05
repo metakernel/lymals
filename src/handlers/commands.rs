@@ -45,6 +45,10 @@ impl LumaLanguageServer {
                 let code = commands::parse_diagnostic_code_argument(&arguments)?;
                 self.execute_explain_diagnostic(&code).await?
             }
+            Command::ServerStatus => {
+                commands::expect_no_arguments(command, &arguments)?;
+                self.execute_server_status().await?
+            }
         };
 
         Ok(Some(value))
@@ -126,6 +130,20 @@ impl LumaLanguageServer {
             "title": title,
             "remediation": remediation,
             "parseOnly": true,
+        }))
+    }
+
+    async fn execute_server_status(&self) -> Result<Value> {
+        let snapshot = self.state.snapshot();
+        Ok(json!({
+            "command": commands::SERVER_STATUS,
+            "parseOnly": true,
+            "phase": format!("{:?}", snapshot.phase),
+            "trace": format!("{:?}", snapshot.trace),
+            "logLevel": format!("{:?}", snapshot.config.log_level),
+            "workspaceFolders": snapshot.workspace.folders.len(),
+            "openDocuments": self.open_document_count(),
+            "watchedFileInvalidations": snapshot.workspace.watched_file_invalidations,
         }))
     }
 

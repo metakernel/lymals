@@ -578,7 +578,7 @@ fn key_path(source: &crate::syntax::SourceText, entry: &MappingEntry) -> Option<
         while stack.len() > 1
             && stack
                 .last()
-                .is_some_and(|(stack_indent, _)| *stack_indent >= indent + 1)
+                .is_some_and(|(stack_indent, _)| *stack_indent > indent)
         {
             stack.pop();
         }

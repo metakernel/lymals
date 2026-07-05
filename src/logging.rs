@@ -1,7 +1,7 @@
 use std::{
     fs::{File, OpenOptions},
     io::{self, Write},
-    path::Path,
+    path::{Path, PathBuf},
     sync::{Arc, Once, OnceLock},
 };
 
@@ -39,6 +39,19 @@ pub fn init_logging(log_file: Option<&Path>) -> anyhow::Result<()> {
         Some(Err(message)) => Err(anyhow::anyhow!(message.clone())),
         None => Ok(()),
     }
+}
+
+pub fn install_panic_hook(log_file: Option<PathBuf>) {
+    std::panic::set_hook(Box::new(move |panic_info| {
+        let message = format!("lumals panic: {panic_info}\n");
+        if let Some(path) = &log_file
+            && let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path)
+        {
+            let _ = file.write_all(message.as_bytes());
+            return;
+        }
+        let _ = io::stderr().write_all(message.as_bytes());
+    }));
 }
 
 #[derive(Clone)]

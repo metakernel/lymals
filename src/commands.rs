@@ -6,6 +6,7 @@ pub const SHOW_SYNTAX_TREE: &str = "lumals.showSyntaxTree";
 pub const SHOW_CONFIG: &str = "lumals.showConfig";
 pub const FORMAT_WORKSPACE_FILE: &str = "lumals.formatWorkspaceFile";
 pub const EXPLAIN_DIAGNOSTIC: &str = "lumals.explainDiagnostic";
+pub const SERVER_STATUS: &str = "lumals.serverStatus";
 
 pub const ALL: &[&str] = &[
     RESTART_INDEX,
@@ -13,6 +14,7 @@ pub const ALL: &[&str] = &[
     SHOW_CONFIG,
     FORMAT_WORKSPACE_FILE,
     EXPLAIN_DIAGNOSTIC,
+    SERVER_STATUS,
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -22,6 +24,7 @@ pub enum Command {
     ShowConfig,
     FormatWorkspaceFile,
     ExplainDiagnostic,
+    ServerStatus,
 }
 
 impl Command {
@@ -33,6 +36,7 @@ impl Command {
             SHOW_CONFIG => Some(Self::ShowConfig),
             FORMAT_WORKSPACE_FILE => Some(Self::FormatWorkspaceFile),
             EXPLAIN_DIAGNOSTIC => Some(Self::ExplainDiagnostic),
+            SERVER_STATUS => Some(Self::ServerStatus),
             _ => None,
         }
     }
@@ -50,6 +54,7 @@ impl Command {
             Self::ShowConfig => SHOW_CONFIG,
             Self::FormatWorkspaceFile => FORMAT_WORKSPACE_FILE,
             Self::ExplainDiagnostic => EXPLAIN_DIAGNOSTIC,
+            Self::ServerStatus => SERVER_STATUS,
         }
     }
 }
@@ -234,9 +239,9 @@ mod tests {
     use serde_json::json;
 
     use super::{
-        Command, EXPLAIN_DIAGNOSTIC, FORMAT_WORKSPACE_FILE, SHOW_CONFIG, SHOW_SYNTAX_TREE,
-        diagnostic_explanation, expect_no_arguments, parse_diagnostic_code_argument,
-        parse_uri_argument,
+        Command, EXPLAIN_DIAGNOSTIC, FORMAT_WORKSPACE_FILE, SERVER_STATUS, SHOW_CONFIG,
+        SHOW_SYNTAX_TREE, diagnostic_explanation, expect_no_arguments,
+        parse_diagnostic_code_argument, parse_uri_argument,
     };
 
     #[test]
@@ -247,6 +252,7 @@ mod tests {
         assert!(commands.contains(&SHOW_CONFIG.to_string()));
         assert!(commands.contains(&FORMAT_WORKSPACE_FILE.to_string()));
         assert!(commands.contains(&EXPLAIN_DIAGNOSTIC.to_string()));
+        assert!(commands.contains(&SERVER_STATUS.to_string()));
     }
 
     #[test]

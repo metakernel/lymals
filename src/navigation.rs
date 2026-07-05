@@ -211,18 +211,16 @@ fn directive_navigation(
     if let Some(path_span) = directive_target_span(directive, source)
         && contains(path_span, offset)
         && matches!(directive.name.as_str(), "@import" | "@include" | "@use")
+        && let Some(target) = directive_target(directive)
+        && let Ok(uri) = resolve_guarded_import(
+            request.uri,
+            &target,
+            request.workspace_folders,
+            request.config,
+        )
+        && let Some(location) = workspace.file_entry(&uri).map(file_entry_root_location)
     {
-        if let Some(target) = directive_target(directive)
-            && let Ok(uri) = resolve_guarded_import(
-                request.uri,
-                &target,
-                request.workspace_folders,
-                request.config,
-            )
-            && let Some(location) = workspace.file_entry(&uri).map(file_entry_root_location)
-        {
-            return vec![location];
-        }
+        return vec![location];
     }
 
     if let Some(alias_span) = directive_alias_span(directive, source)
@@ -608,6 +606,7 @@ fn resolve_implementation_path(
     workspace.resolve_path_target(&target.uri, &path.segments[1..], Some(target.path_prefix))
 }
 
+#[allow(clippy::only_used_in_recursion)]
 fn static_target_for_identifier(
     ident: &str,
     definitions: &[Definition],
