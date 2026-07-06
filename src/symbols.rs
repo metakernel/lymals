@@ -159,14 +159,32 @@ fn build_document_symbol(
         }
     }
 
+    let selection_span = document.separator_span.unwrap_or(document.span);
+    let span = match document.separator_span {
+        Some(separator_span) => span_union(document.span, separator_span),
+        None => document.span,
+    };
+
     DocumentSymbolNode {
         name: format!("document{index}"),
         detail: None,
         kind: LspSymbolKind::MODULE,
-        span: document.span,
-        selection_span: document.separator_span.unwrap_or(document.span),
+        span,
+        selection_span,
         children,
     }
+}
+
+/// Returns the smallest span that contains both `a` and `b`.
+///
+/// Used to guarantee that a `DocumentSymbol`'s outer `span` (LSP `range`)
+/// always contains its `selection_span` (LSP `selectionRange`), which the
+/// LSP spec requires and which `vscode-languageclient` validates client-side.
+/// The fallback parser's document `span` covers only the document's content
+/// lines, while `separator_span` covers the preceding `---`/`...` marker
+/// line, so the two can be disjoint without this union.
+fn span_union(a: SourceSpan, b: SourceSpan) -> SourceSpan {
+    SourceSpan::new(a.file_id, a.start.min(b.start), a.end.max(b.end))
 }
 
 fn build_directive_symbol(
@@ -437,5 +455,60 @@ fn strip_quotes(value: &str) -> &str {
         &value[1..value.len() - 1]
     } else {
         value
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::parse_fallback;
+    use crate::syntax::{FileId, ParsedFile};
+
+    /// Regression test for a real bug caught by end-to-end VS Code extension
+    /// testing: `vscode-languageclient` validates that every `DocumentSymbol`'s
+    /// `range` contains its `selectionRange`. The fallback parser's
+    /// `Document::span` covers only the document's content lines, while
+    /// `Document::separator_span` covers the preceding `---`/`...` marker line
+    /// that precedes it, so a document whose content begins immediately after
+    /// its separator previously produced a root document symbol whose `span`
+    /// excluded the separator line even though `selection_span` pointed at it,
+    /// violating the LSP spec and throwing
+    /// "selectionRange must be contained in fullRange" in real clients.
+    #[test]
+    fn document_root_symbol_span_always_contains_its_selection_span() {
+        let text = "# comment\n---\nmessage: hello\n";
+        let parsed = parse_fallback(FileId(1), "fixture.lyma", text);
+
+        #[cfg(feature = "upstream-lyma")]
+        let ParsedFile::Fallback(file) = &parsed.file else {
+            panic!("parse_fallback must return ParsedFile::Fallback");
+        };
+        #[cfg(not(feature = "upstream-lyma"))]
+        let ParsedFile::Fallback(file) = &parsed.file;
+
+        let symbols = build_document_symbols(&file.ast, &parsed.source);
+        assert!(!symbols.is_empty(), "expected at least one document symbol");
+
+        for symbol in &symbols {
+            assert_span_containment_recursively(symbol);
+        }
+    }
+
+    fn assert_span_containment_recursively(symbol: &DocumentSymbolNode) {
+        assert!(
+            span_contains(symbol.span, symbol.selection_span),
+            "symbol {:?} span {:?} does not contain selection_span {:?}",
+            symbol.name,
+            symbol.span,
+            symbol.selection_span,
+        );
+
+        for child in &symbol.children {
+            assert_span_containment_recursively(child);
+        }
+    }
+
+    fn span_contains(outer: SourceSpan, inner: SourceSpan) -> bool {
+        outer.file_id == inner.file_id && outer.start <= inner.start && inner.end <= outer.end
     }
 }

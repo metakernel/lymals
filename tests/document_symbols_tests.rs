@@ -851,7 +851,7 @@ async fn lsp_document_symbols_snapshot_returns_nested_symbols() {
           },
           "start": {
             "character": 0,
-            "line": 1
+            "line": 0
           }
         },
         "selectionRange": {

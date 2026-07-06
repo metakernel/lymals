@@ -63,7 +63,10 @@ async fn real_binary_stdio_lifecycle_handles_lsp_logs_without_protocol_noise() {
         .expect("timed out waiting for initialize response");
     assert_eq!(initialize["id"], 1);
     assert_eq!(initialize["result"]["serverInfo"]["name"], "lymals");
-    assert_eq!(initialize["result"]["capabilities"]["positionEncoding"], "utf-16");
+    assert_eq!(
+        initialize["result"]["capabilities"]["positionEncoding"],
+        "utf-16"
+    );
     assert_eq!(
         initialize["result"]["capabilities"]["workspace"]["workspaceFolders"]["supported"],
         true

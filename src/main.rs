@@ -141,7 +141,12 @@ mod tests {
         let mut stderr = Vec::new();
 
         let code = run(
-            ["lymals", "--version", "--log-file", "?:\\invalid\\lymals.log"],
+            [
+                "lymals",
+                "--version",
+                "--log-file",
+                "?:\\invalid\\lymals.log",
+            ],
             &mut stdout,
             &mut stderr,
         );

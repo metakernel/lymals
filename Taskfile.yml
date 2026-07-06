@@ -12,18 +12,37 @@ tasks:
       - echo "{{.GREETING}}"
     silent: true
 
-  vsix:
-    desc: Package the VS Code extension into a .vsix file
+  vscode:install:
+    desc: Install VS Code extension dependencies
     dir: '{{.VSCODE_DIR}}'
     cmds:
+      - npm install
+
+  vscode:compile:
+    desc: Compile the VS Code extension
+    dir: '{{.VSCODE_DIR}}'
+    deps:
+      - vscode:install
+    cmds:
       - npm run compile
-      - npx vsce package --no-dependencies
-    sources:
-      - '{{.VSCODE_DIR}}/src/**/*.ts'
-      - '{{.VSCODE_DIR}}/extension.ts'
-      - '{{.VSCODE_DIR}}/package.json'
-      - '{{.VSCODE_DIR}}/language-configuration.json'
-      - '{{.VSCODE_DIR}}/syntaxes/**/*'
-      - '{{.VSCODE_DIR}}/tsconfig.json'
-    generates:
-      - '{{.VSCODE_DIR}}/*.vsix'
+
+  vscode:test:
+    desc: Run the VS Code extension tests
+    dir: '{{.VSCODE_DIR}}'
+    deps:
+      - vscode:install
+    cmds:
+      - npm test
+
+  vscode:package:
+    desc: Package the VS Code extension into a .vsix file
+    dir: '{{.VSCODE_DIR}}'
+    deps:
+      - vscode:compile
+    cmds:
+      - npm run package
+
+  vsix:
+    desc: Deprecated alias for vscode:package
+    cmds:
+      - task vscode:package

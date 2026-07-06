@@ -15,6 +15,8 @@ import { EXTENSION_SECTION, getExtensionConfig, getServerConfig, SERVER_SECTION,
 import { createLogger, Logger } from './logging';
 import { resolveServerExecutable } from './serverResolver';
 
+type PathApi = Pick<typeof path, 'dirname' | 'isAbsolute' | 'join' | 'resolve'>;
+
 let client: LanguageClient | undefined;
 let logger: Logger | undefined;
 let activationContext: vscode.ExtensionContext | undefined;
@@ -319,20 +321,24 @@ function getPrimaryWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
   return vscode.workspace.workspaceFolders?.[0];
 }
 
-function resolveOptionalPath(candidatePath: string | undefined, workspaceFolder?: vscode.WorkspaceFolder): string | undefined {
+export function resolveOptionalPath(
+  candidatePath: string | undefined,
+  workspaceFolder?: vscode.WorkspaceFolder,
+  pathApi: PathApi = path,
+): string | undefined {
   if (!candidatePath) {
     return undefined;
   }
 
-  if (path.isAbsolute(candidatePath)) {
+  if (pathApi.isAbsolute(candidatePath)) {
     return candidatePath;
   }
 
   if (workspaceFolder) {
-    return path.resolve(workspaceFolder.uri.fsPath, candidatePath);
+    return pathApi.resolve(workspaceFolder.uri.fsPath, candidatePath);
   }
 
-  return path.resolve(candidatePath);
+  return pathApi.resolve(candidatePath);
 }
 
 function formatExecutableForLog(executable: Executable, workspaceFolder?: vscode.WorkspaceFolder): string {
@@ -450,14 +456,37 @@ async function resolveServerLogFile(
   return resolvedPath;
 }
 
+export function resolveServerLogFilePath(
+  configuredPath: string | undefined,
+  workspaceFolder?: vscode.WorkspaceFolder,
+  pathApi: PathApi = path,
+  extensionMode = activationContext?.extensionMode,
+  storagePath = activationContext?.storageUri?.fsPath ?? activationContext?.globalStorageUri.fsPath,
+): string | undefined {
+  return resolveOptionalPath(configuredPath, workspaceFolder, pathApi)
+    ?? getDefaultDevelopmentLogFilePath(extensionMode, storagePath, workspaceFolder, pathApi);
+}
+
 function getDefaultDevelopmentLogFile(workspaceFolder?: vscode.WorkspaceFolder): string | undefined {
-  if (activationContext?.extensionMode !== vscode.ExtensionMode.Development) {
+  return getDefaultDevelopmentLogFilePath(
+    activationContext?.extensionMode,
+    activationContext?.storageUri?.fsPath ?? activationContext?.globalStorageUri.fsPath,
+    workspaceFolder,
+  );
+}
+
+export function getDefaultDevelopmentLogFilePath(
+  extensionMode: vscode.ExtensionMode | undefined,
+  storagePath: string | undefined,
+  workspaceFolder?: vscode.WorkspaceFolder,
+  pathApi: Pick<typeof path, 'join'> = path,
+): string | undefined {
+  if (extensionMode !== vscode.ExtensionMode.Development || !storagePath) {
     return undefined;
   }
 
-  const storagePath = activationContext.storageUri?.fsPath ?? activationContext.globalStorageUri.fsPath;
   const fileName = workspaceFolder ? `${workspaceFolder.name}.lymals.log` : 'lymals.log';
-  return path.join(storagePath, 'logs', fileName);
+  return pathApi.join(storagePath, 'logs', fileName);
 }
 
 function logServerLogFileLocation(executable: Executable, configuredLogFile: string | undefined): void {

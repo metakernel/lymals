@@ -52,6 +52,22 @@ suite('serverResolver', () => {
     assert.equal(executable.command, 'D:\\repos\\lymals\\target\\debug\\lymals.exe');
   });
 
+  test('probes a configured Windows path with spaces via command/argv without manual quoting', async () => {
+    const calls: Array<{ command: string; args: readonly string[] }> = [];
+
+    const executable = await resolveServerExecutable(createConfig({ serverPath: 'C:\\Program Files\\Lymals\\lymals' }), {
+      workspaceFolder,
+      platform: 'win32',
+      probeExecutable: async (command, args) => {
+        calls.push({ command, args });
+        return 'lymals 1.2.3';
+      },
+    });
+
+    assert.equal(executable.command, 'C:\\Program Files\\Lymals\\lymals.exe');
+    assert.deepEqual(calls, [{ command: 'C:\\Program Files\\Lymals\\lymals.exe', args: ['--version'] }]);
+  });
+
   test('falls back to PATH lookup when no other candidate is available', async () => {
     const calls: Array<{ command: string; args: readonly string[] }> = [];
     const executable = await resolveServerExecutable(createConfig({ serverArgs: ['--log-level', 'debug'] }), {
@@ -84,6 +100,23 @@ suite('serverResolver', () => {
     assert.equal(executable.command, '/opt/custom/lymals');
     assert.deepEqual(executable.args, ['--log-level', 'debug']);
     assert.deepEqual(calls, [{ command: '/opt/custom/lymals', args: ['--version'] }]);
+  });
+
+  test('keeps Unix executable names unchanged for override paths with spaces', async () => {
+    const calls: Array<{ command: string; args: readonly string[] }> = [];
+
+    const executable = await resolveServerExecutable(createConfig(), {
+      environment: { LYMALS_SERVER_PATH: '/opt/my apps/lymals' },
+      platform: 'linux',
+      pathExists: async () => false,
+      probeExecutable: async (command, args) => {
+        calls.push({ command, args });
+        return 'lymals 3.4.5';
+      },
+    });
+
+    assert.equal(executable.command, '/opt/my apps/lymals');
+    assert.deepEqual(calls, [{ command: '/opt/my apps/lymals', args: ['--version'] }]);
   });
 
   test('rejects binaries whose version output is not from lymals', async () => {

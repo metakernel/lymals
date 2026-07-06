@@ -53,6 +53,12 @@ After the Extension Development Host opens:
 5. Run **Lymals: Show Syntax Tree** (or another Lymals command) to verify command plumbing.
 6. Open **View → Output** and select **Lymals** to inspect client logs and optional LSP trace output.
 
+Path-handling notes:
+
+- The extension launches the server with a direct executable path plus argv array; do not add manual shell quotes around paths with spaces.
+- Windows example: `C:\Program Files\Lymals\lymals.exe`
+- macOS/Linux example: `/opt/my apps/lymals`
+
 ### Task 16 validation record (Windows, headless environment)
 
 Because this workspace runs in a CI-like/headless Windows environment, a real interactive VS Code GUI session and manual Extension Development Host inspection were **not** available. Validation for Task 16 therefore split into:
@@ -112,6 +118,11 @@ This plan stops at local packaging. It does **not** publish or upload the `.vsix
 - `lymalsExtension.server.logFile`: passes `--log-file <path>` to the server.
 - `lymalsExtension.server.rustLog`: sets `RUST_LOG` for the server process.
 - `lymalsExtension.server.trace.server`: writes LSP traffic to **Output > Lymals**.
+
+Examples:
+
+- Windows `lymalsExtension.server.logFile`: `C:\Users\you\AppData\Local\Lymals\logs\server.log`
+- macOS/Linux `lymalsExtension.server.logFile`: `/tmp/lymals/server.log`
 
 When the extension runs in development mode and `lymalsExtension.server.logFile` is left empty, it automatically chooses a storage-backed log file so server logging does not compete with stdio. The resolved log path is written to **Output > Lymals** on startup.
 

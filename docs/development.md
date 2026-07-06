@@ -65,6 +65,7 @@ Use `npm run watch` instead of repeated `npm run compile` during active extensio
 2. Set `lymalsExtension.server.path` to the local debug binary:
    - Windows: `../../target/debug/lymals.exe`
    - macOS/Linux: `../../target/debug/lymals`
+   - If the binary lives under a path with spaces, enter the raw path value without extra quoting because the extension spawns it directly with command + argv (for example `C:\Program Files\Lymals\lymals.exe` or `/opt/my apps/lymals`).
 3. Press `F5` to start the Extension Development Host.
 4. In the new window, open a sample `.lyma` file such as `../../tests/fixtures/diagnostics/syntax_error.lyma`.
 5. Confirm Lyma diagnostics appear in Problems.
@@ -73,6 +74,9 @@ Use `npm run watch` instead of repeated `npm run compile` during active extensio
 ### Debugging tips
 
 - `lymalsExtension.server.logFile` adds `--log-file` to the server command.
+- Example log-file paths:
+  - Windows: `C:\Users\you\AppData\Local\Lymals\logs\server.log`
+  - macOS/Linux: `/tmp/lymals/server.log`
 - `lymalsExtension.server.rustLog` sets `RUST_LOG` for the spawned server process.
 - In Extension Development mode, leaving `lymalsExtension.server.logFile` empty uses a storage-backed default log file; the resolved path is announced in **Output > Lymals**.
 - `lymalsExtension.server.trace.server` is the quickest way to inspect raw LSP traffic.
