@@ -1,4 +1,5 @@
 use std::collections::BTreeSet;
+use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 use tower_lsp::lsp_types::{FileEvent, Url, WorkspaceFolder};
@@ -7,6 +8,24 @@ use crate::config::LumalsConfig;
 
 pub const LUMA_GLOB: &str = "**/*.luma";
 pub const WATCH_REGISTRATION_ID: &str = "lumals-watch-luma-files";
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ValidatedWorkspaceLumaFile {
+    pub requested_path: PathBuf,
+    pub canonical_path: PathBuf,
+    pub relative_path: PathBuf,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WorkspaceLumaFilePolicyError {
+    WorkspaceIndexingDisabled,
+    NonFileUri,
+    NotLuma,
+    OutsideAllowedRoots,
+    ExcludedByGlob,
+    MissingFile,
+    NotRegularFile,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct WorkspaceSnapshot {
@@ -105,7 +124,8 @@ pub fn is_workspace_luma_uri(
         return false;
     };
 
-    let Some(relative_path) = path_relative_to_any_root(&path, workspace_folders, config) else {
+    let Some(relative_path) = existing_or_lexical_relative_path(&path, workspace_folders, config)
+    else {
         return false;
     };
 
@@ -113,6 +133,54 @@ pub fn is_workspace_luma_uri(
         &normalize_path_for_glob(&relative_path),
         &config.exclude_globs,
     )
+}
+
+pub fn validate_workspace_luma_file_uri(
+    uri: &Url,
+    workspace_folders: &[WorkspaceFolder],
+    config: &LumalsConfig,
+) -> Result<ValidatedWorkspaceLumaFile, WorkspaceLumaFilePolicyError> {
+    if !config.index_workspace {
+        return Err(WorkspaceLumaFilePolicyError::WorkspaceIndexingDisabled);
+    }
+    if uri.scheme() != "file" {
+        return Err(WorkspaceLumaFilePolicyError::NonFileUri);
+    }
+    if !uri.path().ends_with(".luma") {
+        return Err(WorkspaceLumaFilePolicyError::NotLuma);
+    }
+
+    let requested_path = file_url_to_path(uri).ok_or(WorkspaceLumaFilePolicyError::NonFileUri)?;
+    let canonical_path = fs::canonicalize(&requested_path)
+        .map(normalize_path)
+        .map_err(|_| WorkspaceLumaFilePolicyError::MissingFile)?;
+
+    if !canonical_path.to_string_lossy().ends_with(".luma") {
+        return Err(WorkspaceLumaFilePolicyError::NotLuma);
+    }
+
+    let metadata =
+        fs::metadata(&canonical_path).map_err(|_| WorkspaceLumaFilePolicyError::MissingFile)?;
+    if !metadata.is_file() {
+        return Err(WorkspaceLumaFilePolicyError::NotRegularFile);
+    }
+
+    let relative_path =
+        canonical_path_relative_to_any_root(&canonical_path, workspace_folders, config)
+            .ok_or(WorkspaceLumaFilePolicyError::OutsideAllowedRoots)?;
+
+    if matches_any_glob(
+        &normalize_path_for_glob(&relative_path),
+        &config.exclude_globs,
+    ) {
+        return Err(WorkspaceLumaFilePolicyError::ExcludedByGlob);
+    }
+
+    Ok(ValidatedWorkspaceLumaFile {
+        requested_path,
+        canonical_path,
+        relative_path,
+    })
 }
 
 pub fn effective_roots(
@@ -168,12 +236,43 @@ fn path_relative_to_any_root(
     workspace_folders: &[WorkspaceFolder],
     config: &LumalsConfig,
 ) -> Option<PathBuf> {
-    let mut roots = effective_roots(workspace_folders, config);
-    roots.extend(
-        workspace_folders
-            .iter()
-            .filter_map(|folder| file_url_to_path(&folder.uri)),
-    );
+    path_relative_to_roots(path, &effective_roots(workspace_folders, config))
+}
+
+fn canonical_path_relative_to_any_root(
+    path: &Path,
+    workspace_folders: &[WorkspaceFolder],
+    config: &LumalsConfig,
+) -> Option<PathBuf> {
+    path_relative_to_roots(path, &effective_canonical_roots(workspace_folders, config))
+}
+
+fn existing_or_lexical_relative_path(
+    path: &Path,
+    workspace_folders: &[WorkspaceFolder],
+    config: &LumalsConfig,
+) -> Option<PathBuf> {
+    if let Ok(canonical_path) = fs::canonicalize(path).map(normalize_path) {
+        return canonical_path_relative_to_any_root(&canonical_path, workspace_folders, config);
+    }
+
+    path_relative_to_any_root(path, workspace_folders, config)
+}
+
+fn effective_canonical_roots(
+    workspace_folders: &[WorkspaceFolder],
+    config: &LumalsConfig,
+) -> Vec<PathBuf> {
+    let mut roots = effective_roots(workspace_folders, config)
+        .into_iter()
+        .filter_map(|root| fs::canonicalize(root).ok().map(normalize_path))
+        .collect::<Vec<_>>();
+    roots.sort();
+    roots.dedup();
+    roots
+}
+
+fn path_relative_to_roots(path: &Path, roots: &[PathBuf]) -> Option<PathBuf> {
     for root in roots {
         if let Ok(relative) = path.strip_prefix(&root) {
             return Some(relative.to_path_buf());

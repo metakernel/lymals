@@ -7,7 +7,9 @@ use std::{
 use thiserror::Error;
 use tower_lsp::lsp_types::Url;
 
-use crate::workspace::{effective_roots, file_url_to_path, normalize_path};
+use crate::workspace::{
+    effective_roots, file_url_to_path, normalize_path, validate_workspace_luma_file_uri,
+};
 use crate::{
     ast::{AstFile, Directive, DocumentItem},
     config::LumalsConfig,
@@ -341,33 +343,11 @@ fn ensure_path_within_roots(
     workspace_folders: &[tower_lsp::lsp_types::WorkspaceFolder],
     config: &LumalsConfig,
 ) -> Result<Url, ImportPolicyError> {
-    let mut roots = effective_roots(workspace_folders, config);
-    let canonical_roots = roots
-        .iter()
-        .filter_map(|root| fs::canonicalize(root).ok().map(normalize_path))
-        .collect::<Vec<_>>();
-    roots.extend(canonical_roots);
-    roots.extend(
-        workspace_folders
-            .iter()
-            .filter_map(|folder| file_url_to_path(&folder.uri)),
-    );
-    roots.extend(
-        config
-            .allowed_roots
-            .iter()
-            .map(PathBuf::from)
-            .map(normalize_path),
-    );
-    let canonical_path = fs::canonicalize(&path)
+    let candidate_path = fs::canonicalize(&path)
         .ok()
         .map(normalize_path)
         .unwrap_or(path);
-    if !roots.is_empty()
-        && roots
-            .iter()
-            .any(|root| is_under_root(&canonical_path, root))
-    {
+    if is_within_configured_roots(&candidate_path, workspace_folders, config) {
         Ok(uri)
     } else {
         Err(ImportPolicyError::OutsideAllowedRoots)
@@ -384,10 +364,10 @@ fn validate_resolved_file(
             uri.scheme().to_string(),
         ));
     }
-    let path = file_url_to_path(uri).ok_or(ImportPolicyError::InvalidTarget)?;
-    let canonical = fs::canonicalize(&path).map_err(|_| ImportPolicyError::MissingTarget)?;
-    ensure_path_within_roots(canonical.clone(), uri.clone(), workspace_folders, config)?;
-    let metadata = fs::metadata(&canonical).map_err(|_| ImportPolicyError::MissingTarget)?;
+    let validated = validate_workspace_luma_file_uri(uri, workspace_folders, config)
+        .map_err(map_workspace_file_policy_error)?;
+    let metadata =
+        fs::metadata(&validated.canonical_path).map_err(|_| ImportPolicyError::MissingTarget)?;
     if metadata.len() > u64::from(config.max_indexed_file_bytes) {
         return Err(ImportPolicyError::FileTooLarge);
     }
@@ -398,6 +378,43 @@ fn canonical_existing_path(uri: &Url) -> Option<PathBuf> {
     file_url_to_path(uri)
         .and_then(|path| fs::canonicalize(path).ok())
         .map(normalize_path)
+}
+
+fn is_within_configured_roots(
+    path: &Path,
+    workspace_folders: &[tower_lsp::lsp_types::WorkspaceFolder],
+    config: &LumalsConfig,
+) -> bool {
+    let mut roots = effective_roots(workspace_folders, config);
+    let canonical_roots = roots
+        .iter()
+        .filter_map(|root| fs::canonicalize(root).ok().map(normalize_path))
+        .collect::<Vec<_>>();
+    roots.extend(canonical_roots);
+
+    !roots.is_empty() && roots.iter().any(|root| is_under_root(path, root))
+}
+
+fn map_workspace_file_policy_error(
+    error: crate::workspace::WorkspaceLumaFilePolicyError,
+) -> ImportPolicyError {
+    match error {
+        crate::workspace::WorkspaceLumaFilePolicyError::WorkspaceIndexingDisabled
+        | crate::workspace::WorkspaceLumaFilePolicyError::OutsideAllowedRoots => {
+            ImportPolicyError::OutsideAllowedRoots
+        }
+        crate::workspace::WorkspaceLumaFilePolicyError::NonFileUri => {
+            ImportPolicyError::InvalidTarget
+        }
+        crate::workspace::WorkspaceLumaFilePolicyError::NotLuma
+        | crate::workspace::WorkspaceLumaFilePolicyError::MissingFile
+        | crate::workspace::WorkspaceLumaFilePolicyError::NotRegularFile => {
+            ImportPolicyError::MissingTarget
+        }
+        crate::workspace::WorkspaceLumaFilePolicyError::ExcludedByGlob => {
+            ImportPolicyError::OutsideAllowedRoots
+        }
+    }
 }
 
 fn is_under_root(path: &Path, root: &Path) -> bool {
