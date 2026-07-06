@@ -35,7 +35,7 @@ eval = []
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive"] }
-lyma = { git = "https://github.com/metakernel/lyma", rev = "fab0c21b1e32b837a37a8ef738fd2b64364d6f81", optional = true, default-features = false }
+lyma = { git = "https://github.com/metakernel/lyma", optional = true, default-features = false }
 miette = { version = "7.4", features = ["fancy-no-backtrace"] }
 parking_lot = "0.12"
 ropey = "1.6"

@@ -600,36 +600,36 @@ dependencies = [
 ]
 
 [[package]]
-name = "luma"
+name = "lyma"
 version = "0.1.0"
-source = "git+https://github.com/metakernel/luma?rev=fab0c21b1e32b837a37a8ef738fd2b64364d6f81#fab0c21b1e32b837a37a8ef738fd2b64364d6f81"
+source = "git+https://github.com/metakernel/lyma#befcc84b959b53a36a400d5f7e42b4d9bf86aa75"
 dependencies = [
- "luma-parser",
- "luma-syntax",
+ "lyma-parser",
+ "lyma-syntax",
 ]
 
 [[package]]
-name = "luma-parser"
+name = "lyma-parser"
 version = "0.1.0"
-source = "git+https://github.com/metakernel/luma?rev=fab0c21b1e32b837a37a8ef738fd2b64364d6f81#fab0c21b1e32b837a37a8ef738fd2b64364d6f81"
+source = "git+https://github.com/metakernel/lyma#befcc84b959b53a36a400d5f7e42b4d9bf86aa75"
 dependencies = [
- "luma-syntax",
+ "lyma-syntax",
 ]
 
 [[package]]
-name = "luma-syntax"
+name = "lyma-syntax"
 version = "0.1.0"
-source = "git+https://github.com/metakernel/luma?rev=fab0c21b1e32b837a37a8ef738fd2b64364d6f81#fab0c21b1e32b837a37a8ef738fd2b64364d6f81"
+source = "git+https://github.com/metakernel/lyma#befcc84b959b53a36a400d5f7e42b4d9bf86aa75"
 
 [[package]]
-name = "lumals"
+name = "lymals"
 version = "0.0.0"
 dependencies = [
  "anyhow",
  "assert_matches",
  "clap",
  "insta",
- "luma",
+ "lyma",
  "miette",
  "parking_lot",
  "pretty_assertions",
