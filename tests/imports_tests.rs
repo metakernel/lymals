@@ -94,6 +94,23 @@ fn reports_missing_files_cycles_depth_and_edge_limits() {
     };
     let edges = resolve_import_graph(&main_uri, &main_text, &folders, &edge_limited);
     assert!(edges.diagnostics.iter().any(|diag| diag.code == "L024"));
+
+    fs::write(root.join("big.luma"), "x".repeat(32)).unwrap();
+    fs::write(root.join("main.luma"), "@import \"./big.luma\"\n").unwrap();
+    let oversized = resolve_import_graph(
+        &main_uri,
+        &fs::read_to_string(root.join("main.luma")).unwrap(),
+        &folders,
+        &LumalsConfig {
+            max_indexed_file_bytes: 8,
+            ..LumalsConfig::default()
+        },
+    );
+    assert!(
+        oversized.diagnostics.iter().any(|diag| diag.code == "L020"),
+        "{:?}",
+        oversized.diagnostics
+    );
 }
 
 #[test]
@@ -123,6 +140,16 @@ fn blocks_traversal_outside_roots_and_unsafe_schemes() {
         )
         .unwrap_err(),
         ImportPolicyError::DisallowedScheme("https".to_string())
+    );
+    assert_eq!(
+        resolve_guarded_import(
+            &main_uri,
+            "pkg://registry/module",
+            &folders,
+            &LumalsConfig::default()
+        )
+        .unwrap_err(),
+        ImportPolicyError::DisallowedScheme("pkg".to_string())
     );
 
     let outside = tempdir().unwrap();
@@ -162,6 +189,37 @@ fn import_resolution_diagnostics_include_missing_targets() {
     );
 }
 
+#[test]
+fn import_resolution_rejects_symlink_escape_when_supported() {
+    let workspace = tempdir().unwrap();
+    let outside = tempdir().unwrap();
+    let root = workspace.path();
+    fs::write(root.join("main.luma"), "@include \"./linked.luma\"\n").unwrap();
+
+    let outside_path = outside.path().join("escape.luma");
+    fs::write(&outside_path, "escape: true\n").unwrap();
+
+    let link_path = root.join("linked.luma");
+    if try_create_file_symlink(&outside_path, &link_path).is_err() {
+        return;
+    }
+
+    let diagnostics = collect_resolution_diagnostics(
+        &file_uri(root.join("main.luma")),
+        &fs::read_to_string(root.join("main.luma")).unwrap(),
+        FileId(0),
+        &folders(root),
+        &LumalsConfig::default(),
+    );
+
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "L013"),
+        "{diagnostics:?}"
+    );
+}
+
 fn folders(path: &std::path::Path) -> Vec<WorkspaceFolder> {
     vec![WorkspaceFolder {
         uri: Url::from_directory_path(path).unwrap(),
@@ -171,4 +229,20 @@ fn folders(path: &std::path::Path) -> Vec<WorkspaceFolder> {
 
 fn file_uri(path: impl AsRef<std::path::Path>) -> Url {
     Url::from_file_path(path).unwrap()
+}
+
+#[cfg(unix)]
+fn try_create_file_symlink(
+    original: &std::path::Path,
+    link: &std::path::Path,
+) -> std::io::Result<()> {
+    std::os::unix::fs::symlink(original, link)
+}
+
+#[cfg(windows)]
+fn try_create_file_symlink(
+    original: &std::path::Path,
+    link: &std::path::Path,
+) -> std::io::Result<()> {
+    std::os::windows::fs::symlink_file(original, link)
 }

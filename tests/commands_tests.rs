@@ -78,7 +78,7 @@ async fn execute_command_validates_arguments_and_returns_safe_errors() {
     assert_eq!(blocked["error"]["code"], -32602);
     assert_eq!(
         blocked["error"]["message"],
-        "workspace file must stay within configured roots and end with .luma"
+        "workspace file must stay within configured roots, resolve to a regular .luma file, and end with .luma"
     );
 
     let unknown_code = execute_command(
@@ -124,6 +124,7 @@ async fn execute_command_returns_parse_only_results() {
     )
     .await;
     let tree = syntax["result"]["tree"].as_str().unwrap();
+    assert_eq!(syntax["result"]["parseOnly"], true);
     assert!(tree.contains("File "), "{tree}");
     assert!(tree.contains("Document[0]"), "{tree}");
 
@@ -149,6 +150,10 @@ async fn execute_command_returns_parse_only_results() {
     assert_eq!(formatted["result"]["parseOnly"], true);
     assert_eq!(formatted["result"]["changed"], true);
     assert_eq!(formatted["result"]["text"], "root:\n  child: one\n");
+    assert_eq!(
+        fs::read_to_string(&file_path).unwrap(),
+        "root:\n   child:  one  \n"
+    );
 
     let config = execute_command(&mut writer, &mut reader, 5, "lumals.showConfig", json!([])).await;
     assert_eq!(config["result"]["command"], "lumals.showConfig");
@@ -176,6 +181,77 @@ async fn execute_command_returns_parse_only_results() {
     assert_eq!(status["result"]["command"], "lumals.serverStatus");
     assert_eq!(status["result"]["parseOnly"], true);
     assert_eq!(status["result"]["openDocuments"], 1);
+
+    shutdown_server(&mut writer, &mut reader, server_task).await;
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn format_workspace_file_blocks_outside_roots_without_mutating_files() {
+    let (mut writer, mut reader, server_task) = start_server().await;
+
+    let workspace = tempdir().unwrap();
+    let outside = tempdir().unwrap();
+    let outside_path = outside.path().join("escape.luma");
+    fs::write(&outside_path, "root:\n   child:  outside  \n").unwrap();
+    let outside_uri = tower_lsp::lsp_types::Url::from_file_path(&outside_path).unwrap();
+
+    initialize(&mut writer, &mut reader, workspace.path()).await;
+    initialized(&mut writer, &mut reader).await;
+
+    let blocked = execute_command(
+        &mut writer,
+        &mut reader,
+        2,
+        "lumals.formatWorkspaceFile",
+        json!([{ "uri": outside_uri }]),
+    )
+    .await;
+
+    assert_eq!(blocked["error"]["code"], -32602);
+    assert_eq!(
+        blocked["error"]["message"],
+        "workspace file must stay within configured roots, resolve to a regular .luma file, and end with .luma"
+    );
+    assert_eq!(
+        fs::read_to_string(&outside_path).unwrap(),
+        "root:\n   child:  outside  \n"
+    );
+
+    shutdown_server(&mut writer, &mut reader, server_task).await;
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn format_workspace_file_blocks_symlink_escape_when_supported() {
+    let workspace = tempdir().unwrap();
+    let outside = tempdir().unwrap();
+    let outside_path = outside.path().join("escape.luma");
+    fs::write(&outside_path, "root:\n  child: escape\n").unwrap();
+
+    let link_path = workspace.path().join("link.luma");
+    if try_create_file_symlink(&outside_path, &link_path).is_err() {
+        return;
+    }
+
+    let link_uri = tower_lsp::lsp_types::Url::from_file_path(&link_path).unwrap();
+    let (mut writer, mut reader, server_task) = start_server().await;
+
+    initialize(&mut writer, &mut reader, workspace.path()).await;
+    initialized(&mut writer, &mut reader).await;
+
+    let blocked = execute_command(
+        &mut writer,
+        &mut reader,
+        2,
+        "lumals.formatWorkspaceFile",
+        json!([{ "uri": link_uri }]),
+    )
+    .await;
+
+    assert_eq!(blocked["error"]["code"], -32602);
+    assert_eq!(
+        blocked["error"]["message"],
+        "workspace file must stay within configured roots, resolve to a regular .luma file, and end with .luma"
+    );
 
     shutdown_server(&mut writer, &mut reader, server_task).await;
 }
@@ -332,4 +408,20 @@ async fn read_message(stream: &mut tokio::io::DuplexStream) -> Value {
     let mut body = vec![0; content_length];
     stream.read_exact(&mut body).await.unwrap();
     serde_json::from_slice(&body).unwrap()
+}
+
+#[cfg(unix)]
+fn try_create_file_symlink(
+    original: &std::path::Path,
+    link: &std::path::Path,
+) -> std::io::Result<()> {
+    std::os::unix::fs::symlink(original, link)
+}
+
+#[cfg(windows)]
+fn try_create_file_symlink(
+    original: &std::path::Path,
+    link: &std::path::Path,
+) -> std::io::Result<()> {
+    std::os::windows::fs::symlink_file(original, link)
 }

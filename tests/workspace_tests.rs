@@ -7,6 +7,7 @@ use tower_lsp::lsp_types::{Url, WorkspaceFolder};
 use lumals::config::LumalsConfig;
 use lumals::imports::{ImportPolicyError, resolve_guarded_import};
 use lumals::server;
+use lumals::workspace::{self, WorkspaceLumaFilePolicyError};
 
 #[test]
 fn blocks_path_traversal_during_import_resolution() {
@@ -178,6 +179,55 @@ async fn workspace_root_changes_and_file_watches_update_state_and_invalidate_ope
     shutdown_server(&mut writer, &mut reader, server_task).await;
 }
 
+#[test]
+fn workspace_luma_validator_rejects_canonical_targets_outside_roots() {
+    let workspace = tempfile::tempdir().unwrap();
+    let outside = tempfile::tempdir().unwrap();
+    let outside_path = outside.path().join("escape.luma");
+    std::fs::write(&outside_path, "root: true\n").unwrap();
+
+    let validated = workspace::validate_workspace_luma_file_uri(
+        &Url::from_file_path(&outside_path).unwrap(),
+        &[WorkspaceFolder {
+            uri: Url::from_directory_path(workspace.path()).unwrap(),
+            name: "workspace".to_string(),
+        }],
+        &LumalsConfig::default(),
+    );
+
+    assert_eq!(
+        validated.unwrap_err(),
+        WorkspaceLumaFilePolicyError::OutsideAllowedRoots
+    );
+}
+
+#[test]
+fn workspace_luma_validator_rejects_symlink_escape_when_supported() {
+    let workspace = tempfile::tempdir().unwrap();
+    let outside = tempfile::tempdir().unwrap();
+    let outside_path = outside.path().join("escape.luma");
+    std::fs::write(&outside_path, "root: true\n").unwrap();
+
+    let link_path = workspace.path().join("linked.luma");
+    if try_create_file_symlink(&outside_path, &link_path).is_err() {
+        return;
+    }
+
+    let validated = workspace::validate_workspace_luma_file_uri(
+        &Url::from_file_path(&link_path).unwrap(),
+        &[WorkspaceFolder {
+            uri: Url::from_directory_path(workspace.path()).unwrap(),
+            name: "workspace".to_string(),
+        }],
+        &LumalsConfig::default(),
+    );
+
+    assert_eq!(
+        validated.unwrap_err(),
+        WorkspaceLumaFilePolicyError::OutsideAllowedRoots
+    );
+}
+
 async fn shutdown_server(
     writer: &mut tokio::io::DuplexStream,
     reader: &mut tokio::io::DuplexStream,
@@ -242,4 +292,20 @@ async fn read_message(stream: &mut tokio::io::DuplexStream) -> Value {
     let mut body = vec![0; content_length];
     stream.read_exact(&mut body).await.unwrap();
     serde_json::from_slice(&body).unwrap()
+}
+
+#[cfg(unix)]
+fn try_create_file_symlink(
+    original: &std::path::Path,
+    link: &std::path::Path,
+) -> std::io::Result<()> {
+    std::os::unix::fs::symlink(original, link)
+}
+
+#[cfg(windows)]
+fn try_create_file_symlink(
+    original: &std::path::Path,
+    link: &std::path::Path,
+) -> std::io::Result<()> {
+    std::os::windows::fs::symlink_file(original, link)
 }

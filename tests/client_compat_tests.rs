@@ -76,7 +76,7 @@ async fn vscode_compatible_clients_get_static_feature_capabilities() {
 }
 
 #[tokio::test(flavor = "current_thread")]
-async fn neovim_style_clients_can_use_utf8_and_simple_stdio_registration() {
+async fn neovim_style_clients_negotiate_utf16_and_simple_stdio_registration() {
     let temp = tempdir().unwrap();
     let root_uri = Url::from_directory_path(temp.path()).unwrap();
     let doc_uri = Url::from_file_path(temp.path().join("main.luma")).unwrap();
@@ -110,7 +110,7 @@ async fn neovim_style_clients_can_use_utf8_and_simple_stdio_registration() {
         .await;
 
     let capabilities = &response["result"]["capabilities"];
-    assert_eq!(capabilities["positionEncoding"], "utf-8");
+    assert_eq!(capabilities["positionEncoding"], "utf-16");
     assert_eq!(capabilities["textDocumentSync"]["openClose"], true);
     assert_eq!(capabilities["textDocumentSync"]["change"], 1);
     assert!(capabilities.get("workspace").is_none() || capabilities["workspace"].is_null());

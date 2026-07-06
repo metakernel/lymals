@@ -1,12 +1,20 @@
-use std::path::Path;
+use std::{fs, path::Path};
 
 use serde_json::{Value, json};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
-use tower_lsp::lsp_types::{CompletionItem, CompletionItemKind, InsertTextFormat, Url};
+use tower_lsp::lsp_types::{
+    CompletionItem, CompletionItemKind, CompletionResponse, InsertTextFormat, Position, Url,
+    WorkspaceFolder,
+};
 
-use lumals::server;
+use lumals::{
+    completion::{CompletionRequest, complete},
+    config::LumalsConfig,
+    server,
+    syntax::FileId,
+};
 
 #[tokio::test(flavor = "current_thread")]
 async fn completion_capabilities_and_contextual_items_are_advertised() {
@@ -182,6 +190,54 @@ async fn completion_capabilities_and_contextual_items_are_advertised() {
     );
 
     shutdown_server(&mut writer, &mut reader, server_task).await;
+}
+
+#[test]
+fn import_path_completion_stays_within_safe_local_boundaries() {
+    let workspace = tempfile::tempdir().unwrap();
+    let root = workspace.path();
+    fs::create_dir_all(root.join("nested/child")).unwrap();
+    fs::create_dir_all(root.join("shared")).unwrap();
+    fs::write(root.join("nested/main.luma"), "@import \"./\"").unwrap();
+    fs::write(root.join("nested/child/inside.luma"), "inside: true\n").unwrap();
+    fs::write(root.join("shared/outside_base_dir.luma"), "outside: true\n").unwrap();
+    fs::write(root.join("nested/README.md"), "not a luma file\n").unwrap();
+
+    let uri = Url::from_file_path(root.join("nested/main.luma")).unwrap();
+    let response = complete(CompletionRequest {
+        uri: &uri,
+        text: "@import \"./\"",
+        file_id: FileId(0),
+        position: Position::new(0, 12),
+        workspace_folders: &[WorkspaceFolder {
+            uri: Url::from_directory_path(root).unwrap(),
+            name: "workspace".to_string(),
+        }],
+        config: &LumalsConfig::default(),
+    })
+    .expect("expected path completions");
+
+    let CompletionResponse::Array(items) = response else {
+        panic!("unexpected completion response")
+    };
+    let labels = items
+        .iter()
+        .map(|item| item.label.as_str())
+        .collect::<Vec<_>>();
+
+    assert!(labels.contains(&"./child/inside.luma"), "{labels:?}");
+    assert!(
+        !labels.iter().any(|label| label.contains("..")),
+        "{labels:?}"
+    );
+    assert!(
+        !labels.contains(&"./shared/outside_base_dir.luma"),
+        "{labels:?}"
+    );
+    assert!(
+        !labels.iter().any(|label| label.ends_with("README.md")),
+        "{labels:?}"
+    );
 }
 
 fn fixture_workspace_uri() -> Url {
