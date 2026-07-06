@@ -1,5 +1,5 @@
 count: 2
-- severity=1 code=E0009 source=luma.parser range=0:0-0:1
+- severity=1 code=E0009 source=lyma.parser range=0:0-0:1
   message=unknown directive `@`
 - severity=1 code=L007 source=lymals.validation range=0:0-0:1
   message=malformed directive

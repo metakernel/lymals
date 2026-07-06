@@ -6,6 +6,10 @@
   "publisher": "local-dev",
   "private": true,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/metakernel/lymals.git"
+  },
   "engines": {
     "vscode": "^1.97.0"
   },
@@ -47,7 +51,10 @@
       {
         "language": "lyma",
         "scopeName": "source.lyma",
-        "path": "./syntaxes/lyma.tmLanguage.json"
+        "path": "./syntaxes/lyma.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.lua": "lua"
+        }
       }
     ],
     "commands": [

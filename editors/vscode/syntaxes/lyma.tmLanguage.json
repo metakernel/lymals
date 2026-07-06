@@ -7,26 +7,183 @@
       "include": "#comments"
     },
     {
+      "include": "#documentMarkers"
+    },
+    {
+      "include": "#directives"
+    },
+    {
+      "include": "#controlLines"
+    },
+    {
+      "include": "#letBindings"
+    },
+    {
+      "include": "#blockStrings"
+    },
+    {
+      "include": "#inlineLuaBlocks"
+    },
+    {
+      "include": "#inlineExpressions"
+    },
+    {
       "include": "#strings"
     },
     {
-      "include": "#numbers"
+      "include": "#interpolations"
     },
     {
-      "include": "#keywords"
+      "include": "#tags"
+    },
+    {
+      "include": "#mappingKeys"
+    },
+    {
+      "include": "#sequenceIndicators"
+    },
+    {
+      "include": "#constants"
     }
   ],
   "repository": {
     "comments": {
       "patterns": [
         {
-          "name": "comment.line.double-slash.lyma",
-          "match": "//.*$"
+          "name": "comment.line.number-sign.lyma",
+          "match": "(^|\\s)(?:#|--(?!-)).*$"
+        }
+      ]
+    },
+    "documentMarkers": {
+      "patterns": [
+        {
+          "name": "meta.separator.document.lyma",
+          "match": "^(?:---|\\.\\.\\.)\\s*$"
+        }
+      ]
+    },
+    "directives": {
+      "patterns": [
+        {
+          "name": "meta.directive.lyma",
+          "match": "^(\\s*)(@(?>lyma|import|include|use|meta|schema|profile)\\b)",
+          "captures": {
+            "2": {
+              "name": "keyword.control.directive.lyma"
+            }
+          }
         },
         {
-          "name": "comment.block.lyma",
-          "begin": "/\\*",
-          "end": "\\*/"
+          "name": "meta.annotation.lyma",
+          "match": "(?<![\\w$])@[A-Za-z_][A-Za-z0-9_-]*"
+        }
+      ]
+    },
+    "controlLines": {
+      "patterns": [
+        {
+          "name": "keyword.control.conditional.lyma",
+          "match": "^(\\s*)(\\?(?:if|elif|else)\\b)"
+        },
+        {
+          "name": "keyword.control.loop.lyma",
+          "match": "^(\\s*)(\\*for\\b)"
+        }
+      ]
+    },
+    "letBindings": {
+      "patterns": [
+        {
+          "name": "meta.binding.lyma",
+          "match": "^(\\s*)(let)(\\s+)([A-Za-z_][A-Za-z0-9_-]*)",
+          "captures": {
+            "2": {
+              "name": "keyword.declaration.lyma"
+            },
+            "4": {
+              "name": "variable.other.definition.lyma"
+            }
+          }
+        }
+      ]
+    },
+    "blockStrings": {
+      "patterns": [
+        {
+          "name": "meta.block-scalar.lyma",
+          "begin": "^([ \\t]*)([^#\\n][^:\\n]*:\\s*)([|>])([1-9+-]*)?\\s*$",
+          "beginCaptures": {
+            "2": {
+              "name": "entity.name.tag.lyma"
+            },
+            "3": {
+              "name": "keyword.operator.block-scalar.lyma"
+            },
+            "4": {
+              "name": "constant.numeric.lyma"
+            }
+          },
+          "end": "^(?!\\1[ \\t]+|\\1$)",
+          "contentName": "string.unquoted.block.lyma",
+          "patterns": [
+            {
+              "include": "#interpolations"
+            }
+          ]
+        }
+      ]
+    },
+    "inlineLuaBlocks": {
+      "patterns": [
+        {
+          "name": "meta.embedded.block.lua.lyma",
+          "begin": "\\blua\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "keyword.operator.embedded.lua.lyma"
+            }
+          },
+          "end": "\\}",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.section.embedded.end.lyma"
+            }
+          },
+          "contentName": "meta.embedded.block.lua",
+          "patterns": [
+            {
+              "include": "source.lua"
+            },
+            {
+              "include": "#strings"
+            },
+            {
+              "include": "#interpolations"
+            }
+          ]
+        }
+      ]
+    },
+    "inlineExpressions": {
+      "patterns": [
+        {
+          "name": "meta.inline.expression.lyma",
+          "match": "(^\\s*|:\\s+)(=)(?=\\S)",
+          "captures": {
+            "2": {
+              "name": "keyword.operator.expression.lyma"
+            }
+          }
+        },
+        {
+          "name": "meta.inline.expression.lyma",
+          "match": "(^\\s*|:\\s+)(\\|(?:lua|expr)\\b|\\|(?=\\S))",
+          "captures": {
+            "2": {
+              "name": "keyword.operator.expression.lyma"
+            }
+          }
         }
       ]
     },
@@ -42,22 +199,89 @@
               "match": "\\\\."
             }
           ]
+        },
+        {
+          "name": "string.quoted.single.lyma",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.lyma",
+              "match": "\\\\."
+            }
+          ]
         }
       ]
     },
-    "numbers": {
+    "interpolations": {
       "patterns": [
+        {
+          "name": "meta.interpolation.lyma",
+          "begin": "\\$\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.section.interpolation.begin.lyma"
+            }
+          },
+          "end": "\\}",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.section.interpolation.end.lyma"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#strings"
+            }
+          ]
+        }
+      ]
+    },
+    "tags": {
+      "patterns": [
+        {
+          "name": "entity.name.type.tag.lyma",
+          "match": "(?<![\\w$])![A-Za-z_][A-Za-z0-9_-]*"
+        }
+      ]
+    },
+    "mappingKeys": {
+      "patterns": [
+        {
+          "name": "meta.mapping.key.lyma",
+          "match": "^(\\s*)([^#\\s][^:\\n]*?)(\\s*:)(?=\\s|$)",
+          "captures": {
+            "2": {
+              "name": "entity.name.tag.lyma"
+            },
+            "3": {
+              "name": "punctuation.separator.key-value.lyma"
+            }
+          }
+        }
+      ]
+    },
+    "sequenceIndicators": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.sequence.lyma",
+          "match": "^(\\s*)(-)(?=\\s)"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.lyma",
+          "match": "\\b(?:true|false)\\b"
+        },
+        {
+          "name": "constant.language.null.lyma",
+          "match": "\\bnull\\b"
+        },
         {
           "name": "constant.numeric.lyma",
           "match": "\\b\\d+(?:\\.\\d+)?\\b"
-        }
-      ]
-    },
-    "keywords": {
-      "patterns": [
-        {
-          "name": "keyword.control.lyma",
-          "match": "\\b(?:if|else|for|while|return|let|fn|true|false)\\b"
         }
       ]
     }

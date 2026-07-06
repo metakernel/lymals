@@ -4,9 +4,26 @@ version: '3'
 
 vars:
   GREETING: Hello, World!
+  VSCODE_DIR: editors/vscode
 
 tasks:
   default:
     cmds:
       - echo "{{.GREETING}}"
     silent: true
+
+  vsix:
+    desc: Package the VS Code extension into a .vsix file
+    dir: '{{.VSCODE_DIR}}'
+    cmds:
+      - npm run compile
+      - npx vsce package --no-dependencies
+    sources:
+      - '{{.VSCODE_DIR}}/src/**/*.ts'
+      - '{{.VSCODE_DIR}}/extension.ts'
+      - '{{.VSCODE_DIR}}/package.json'
+      - '{{.VSCODE_DIR}}/language-configuration.json'
+      - '{{.VSCODE_DIR}}/syntaxes/**/*'
+      - '{{.VSCODE_DIR}}/tsconfig.json'
+    generates:
+      - '{{.VSCODE_DIR}}/*.vsix'
