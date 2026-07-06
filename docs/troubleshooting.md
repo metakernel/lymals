@@ -26,4 +26,4 @@ Diagnostics are guarded by document version. If a parse result finishes after a 
 
 - VS Code-compatible clients: v1 ships no VSIX. Use a generic/custom LSP client configured for stdio and point it at the released `lumals` binary. See `editors/vscode/README.md`.
 - Neovim: use `vim.lsp.start` and ensure `root_dir` is the intended workspace root. See `editors/neovim.md`.
-- If positions look wrong around emoji or non-ASCII text, check the client's advertised `general.positionEncodings`; `lumals` prefers UTF-8 when advertised and otherwise falls back to UTF-16.
+- `lumals` currently advertises UTF-16 positions to every client. If positions look wrong around emoji or non-ASCII text, make sure the client honors the negotiated `positionEncoding: "utf-16"`.

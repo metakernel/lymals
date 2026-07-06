@@ -69,3 +69,7 @@ lumals --print-config-schema
 ## Evaluation setting
 
 `evaluation.enabled` is reserved for future work. In v1, both `false` and `true` keep the server fail-closed: no Lua evaluation path is reachable from shipped LSP features.
+
+## Import resolution guardrails
+
+By default, import/include resolution is fail-closed and local-only: `allowedSchemes` defaults to `["file"]`, `allowAbsoluteFileUris` is `false`, targets must stay under workspace folders or explicit `allowedRoots`, and path completion suggests only safe root-bounded local `.luma` files.

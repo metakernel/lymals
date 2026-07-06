@@ -5,6 +5,8 @@ edition = "2024"
 rust-version = "1.85"
 description = "Parse-only Luma language server"
 license = "MIT"
+# Guardrail: v1 distributes binary archives only. Do not publish a crate until
+# versioning, licensing, and release artifact validation policy is completed.
 publish = false
 
 [lib]

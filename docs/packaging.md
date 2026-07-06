@@ -2,6 +2,12 @@
 
 v1 releases publish only standalone `lumals` binary archives plus SHA-256 checksum files.
 
+Publishing guardrail: do **not** publish crates, editor packages, marketplace extensions, or GitHub releases until all of the following are complete for the candidate release:
+
+1. versioning is intentional and no longer placeholder-only;
+2. licensing metadata and shipped license files are verified;
+3. release archives and their SHA-256 checksums are built and validated.
+
 ## Artifacts
 
 - `lumals-linux-x86_64.tar.gz`
@@ -10,6 +16,7 @@ v1 releases publish only standalone `lumals` binary archives plus SHA-256 checks
 - Matching `*.sha256` files
 
 No VS Code, Zed, Neovim, or other editor-specific packages are published for v1.
+`Cargo.toml` also sets `publish = false`, so crates.io publishing is disabled unless that policy is deliberately revisited.
 
 ## Install from a release
 
@@ -21,6 +28,8 @@ No VS Code, Zed, Neovim, or other editor-specific packages are published for v1.
 4. Put `lumals`/`lumals.exe` on your `PATH`, or point your editor configuration at the extracted absolute path.
 5. Confirm the binary works: `lumals --version`.
 
+Before announcing or publishing a release candidate, also verify that the version string, bundled `LICENSE.md`, and generated checksum files match the intended artifacts.
+
 ## Local release-equivalent build
 
 ```sh
@@ -31,4 +40,6 @@ The resulting binary is under `target/release/`.
 
 ## Release workflow
 
-`.github/workflows/release.yml` runs on tags matching `v*` and on manual dispatch. It builds the release binary on Linux, macOS, and Windows, creates archives, writes SHA-256 checksum files, uploads workflow artifacts, and attaches assets to tagged GitHub releases.
+`.github/workflows/release.yml` runs on tags matching `v*` and on manual dispatch. It builds the release binary on Linux, macOS, and Windows, creates archives, writes SHA-256 checksum files, and uploads workflow artifacts for validation.
+
+The workflow intentionally stops at artifact production. It does **not** publish crates, VSIX files, Neovim plugins, or GitHub release assets automatically.

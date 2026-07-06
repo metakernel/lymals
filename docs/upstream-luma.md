@@ -10,7 +10,8 @@
 
 - Repository `LICENSE.md`: MIT (`Copyright (c) 2026 Vincent Roy`).
 - Upstream `Cargo.toml` metadata says `MIT OR Apache-2.0`, but the inspected repository snapshot only ships MIT license text.
-- Go-forward note: direct git dependency use is MIT-compatible for this repo; vendoring/copying should preserve the upstream MIT notice verbatim and re-check Apache metadata if upstream clarifies licensing later.
+- Go-forward note: direct git dependency use is MIT-compatible for this repo; vendoring/copying should preserve the upstream MIT notice verbatim, record copied file paths plus source commit, and re-check Apache metadata if upstream clarifies licensing later.
+- Current state: `lumals` does **not** vendor/copy upstream `metakernel/luma` source files into `src/`; it consumes upstream through the optional pinned git dependency only.
 
 ## Feature flags to use
 
@@ -65,6 +66,13 @@ Stable syntax/data types exposed by `luma::syntax` / `luma_parser` re-exports:
 - Do not execute Lua for v1; keep evaluation features disabled.
 - Imports/includes/modules/tags/schema validation require explicit host wiring upstream and are out of scope for v1 parse-only behavior.
 - Directly exposing raw upstream syntax types across the entire server would over-couple `lumals` to upstream AST details and still not cover many LSP features.
+
+## Maintenance strategy
+
+- Prefer the optional pinned git dependency over copying upstream source.
+- Keep all upstream usage behind local adapters/facades such as `src/parser/upstream.rs`; local fallback logic in `src/parser/fallback.rs` remains a separate implementation, not a vendored upstream copy.
+- When updating upstream, change the Cargo pin and this document together, then re-run `cargo deny check licenses sources` and parser/formatting regression tests.
+- If copying upstream ever becomes unavoidable, preserve upstream copyright/license text in-tree and document: repository, commit, copied files, local modifications, owner for rebases, and exit plan back to dependency-based integration.
 
 ## Go / no-go decision
 

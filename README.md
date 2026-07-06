@@ -20,6 +20,8 @@ target/release/lumals --stdio
 
 See [`docs/packaging.md`](docs/packaging.md) for release artifact names, checksum verification, and local release-equivalent builds.
 
+Guardrail: v1 is binary-only. Do not publish crates, VSIX/editor packages, or GitHub releases until versioning, licensing, and release checksum validation are complete.
+
 Useful flags:
 
 ```text
@@ -96,3 +98,7 @@ cargo doc --workspace --all-features --no-deps
 ```
 
 Dependency rationale and workflows are in [`docs/development.md`](docs/development.md). Upstream parser strategy is documented in [`docs/upstream-luma.md`](docs/upstream-luma.md).
+
+## Contributing
+
+Contributions should stay within the v1 scope: binary-only releases, docs-only editor setup, and parse-only features that never execute Lua. Release/publishing changes must preserve the guardrail that artifacts are validated for versioning, licensing, and checksums before any publish/release action is introduced. See [`docs/development.md`](docs/development.md) for local workflow, test commands, and PR expectations.

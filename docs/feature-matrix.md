@@ -25,14 +25,15 @@
 
 ## Notes
 
-- v1 remains parse-only: editor features never evaluate Lua or schema/tag resolvers.
-- Empty results are intentional when richer answers would require semantic evaluation.
+- v1 remains parse-only: default editor features never evaluate Lua or schema/tag resolvers.
+- Feature handlers are expected to start from the local parser/tokenizer/syntax/semantic facade; line-based heuristics are kept as tested fallbacks for edit/folding/selection shaping only.
+- Empty/partial results are intentional when richer answers would require semantic evaluation or Lua execution.
 
 ## Client validation
 
 | Client shape | Status | Caveats |
 | --- | --- | --- |
-| VS Code-compatible stdio client | Supported via downloaded binary | v1 does not publish a VSIX. Configure a generic/custom LSP client to run `lumals --stdio`, associate `*.luma` with `luma`, and keep logs off stdout. Defaults to UTF-16 positions when the client does not advertise `general.positionEncodings`. |
-| Neovim built-in LSP | Supported via downloaded binary | Use `vim.lsp.start` with `cmd = { "lumals", "--stdio" }`; root detection should point at the project/workspace root. UTF-8 positions are used when advertised by the client. |
+| VS Code-compatible stdio client | Supported via downloaded binary | v1 does not publish a VSIX. Configure a generic/custom LSP client to run `lumals --stdio`, associate `*.luma` with `luma`, and keep logs off stdout. `lumals` currently advertises UTF-16 positions for all clients. |
+| Neovim built-in LSP | Supported via downloaded binary | Use `vim.lsp.start` with `cmd = { "lumals", "--stdio" }`; root detection should point at the project/workspace root. `lumals` currently advertises UTF-16 positions for all clients, including clients that also support UTF-8. |
 
 Automated compatibility coverage lives in `tests/client_compat_tests.rs` and checks representative initialization/capability negotiation plus a basic open/diagnostics/hover round trip.

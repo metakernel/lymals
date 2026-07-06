@@ -27,18 +27,29 @@
 
 ```text
 cargo fmt --all --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test
 cargo test --all-features
 cargo test --test lsp_harness
 cargo bench --bench parse_index
 cargo doc --workspace --all-features --no-deps
+cargo deny check
 ```
 
 Use `UPDATE_GOLDENS=1 cargo test --test parser_tests` only when intentionally refreshing parser golden fixtures.
 
+## Contribution workflow
+
+- Keep changes aligned with the v1 contract: release only raw `lumals` binaries/checksums, keep editor integration docs-only, and do not add Lua execution paths to shipped features.
+- Run the validation commands above before opening a PR; at minimum, formatting, clippy, tests, docs, and `cargo deny check` should pass locally or in CI.
+- Update user/developer docs when behavior, flags, configuration, safety limits, or packaging scope changes.
+- Add or update focused tests with code changes; use snapshot/golden updates only when the behavior change is intentional.
+- Document externally visible changes in `CHANGELOG.md` under `Unreleased`.
+
 ## Architecture notes
 
 - `tower-lsp` owns protocol dispatch in `src/server.rs`; feature-specific request logic lives under `src/handlers/`.
-- Feature engines consume local parser/syntax/semantic facades rather than raw upstream AST types.
+- Feature engines consume local parser/tokenizer/syntax/semantic facades rather than raw upstream AST types.
+- Source-line or indentation heuristics are allowed only as supplements after syntax lookup (for example folding/selection/code-action edit extents), and should stay covered by focused tests.
 - `src/imports.rs` and `src/workspace.rs` enforce resolver containment and workspace limits.
 - `src/eval.rs` is a fail-closed placeholder; do not call it from shipped editor features for v1.
