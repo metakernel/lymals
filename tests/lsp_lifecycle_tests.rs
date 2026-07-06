@@ -7,8 +7,8 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 
-use lumals::server;
-use lumals::state::LifecyclePhase;
+use lymals::server;
+use lymals::state::LifecyclePhase;
 
 #[tokio::test(flavor = "current_thread")]
 async fn json_rpc_lifecycle_initializes_and_shuts_down() {
@@ -35,7 +35,7 @@ async fn json_rpc_lifecycle_initializes_and_shuts_down() {
             "method": "initialize",
             "params": {
                 "processId": null,
-                "clientInfo": { "name": "lumals-test", "version": "0" },
+                "clientInfo": { "name": "lymals-test", "version": "0" },
                 "capabilities": {
                     "general": {
                         "positionEncodings": ["utf-16", "utf-8"]
@@ -52,10 +52,10 @@ async fn json_rpc_lifecycle_initializes_and_shuts_down() {
 
     let initialize = read_message(&mut reader).await;
     assert_eq!(initialize["id"], 1);
-    assert_eq!(initialize["result"]["serverInfo"]["name"], "lumals");
+    assert_eq!(initialize["result"]["serverInfo"]["name"], "lymals");
     assert_eq!(
         initialize["result"]["serverInfo"]["version"],
-        lumals::VERSION
+        lymals::VERSION
     );
     assert_eq!(
         initialize["result"]["capabilities"]["positionEncoding"],
@@ -91,7 +91,7 @@ async fn json_rpc_lifecycle_initializes_and_shuts_down() {
     assert_eq!(backend.state_snapshot().phase, LifecyclePhase::Initialized);
     assert_eq!(
         notifications["window/logMessage"]["params"]["message"],
-        "lumals initialized"
+        "lymals initialized"
     );
     assert_eq!(
         notifications["$/logTrace"]["params"]["message"],
@@ -130,7 +130,7 @@ async fn json_rpc_lifecycle_initializes_and_shuts_down() {
     assert_eq!(shutdown_notification["method"], "window/logMessage");
     assert_eq!(
         shutdown_notification["params"]["message"],
-        "lumals shutting down"
+        "lymals shutting down"
     );
 
     send_message(
@@ -152,13 +152,13 @@ async fn json_rpc_lifecycle_initializes_and_shuts_down() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn binary_stdio_starts_real_lsp_server_without_stdout_noise() {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_lumals"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_lymals"))
         .arg("--stdio")
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
-        .expect("failed to spawn lumals binary");
+        .expect("failed to spawn lymals binary");
 
     let mut writer = child.stdin.take().expect("missing stdin");
     let mut reader = child.stdout.take().expect("missing stdout");
@@ -171,7 +171,7 @@ async fn binary_stdio_starts_real_lsp_server_without_stdout_noise() {
             "method": "initialize",
             "params": {
                 "processId": null,
-                "clientInfo": { "name": "lumals-test", "version": "0" },
+                "clientInfo": { "name": "lymals-test", "version": "0" },
                 "capabilities": {
                     "general": {
                         "positionEncodings": ["utf-8"]
@@ -183,7 +183,7 @@ async fn binary_stdio_starts_real_lsp_server_without_stdout_noise() {
 
     let initialize = read_message_blocking(&mut reader);
     assert_eq!(initialize["id"], 1);
-    assert_eq!(initialize["result"]["serverInfo"]["name"], "lumals");
+    assert_eq!(initialize["result"]["serverInfo"]["name"], "lymals");
     assert_eq!(
         initialize["result"]["capabilities"]["positionEncoding"],
         "utf-16"
@@ -200,7 +200,7 @@ async fn binary_stdio_starts_real_lsp_server_without_stdout_noise() {
 
     let initialized_log = read_message_blocking(&mut reader);
     assert_eq!(initialized_log["method"], "window/logMessage");
-    assert_eq!(initialized_log["params"]["message"], "lumals initialized");
+    assert_eq!(initialized_log["params"]["message"], "lymals initialized");
 
     send_message_blocking(
         &mut writer,
@@ -237,8 +237,8 @@ async fn binary_stdio_starts_real_lsp_server_without_stdout_noise() {
 
     drop(writer);
 
-    let status = child.wait().expect("failed to wait for lumals child");
-    assert!(status.success(), "lumals child failed: {status}");
+    let status = child.wait().expect("failed to wait for lymals child");
+    assert!(status.success(), "lymals child failed: {status}");
 }
 
 fn send_message_blocking<W>(stream: &mut W, value: &Value)

@@ -3,7 +3,7 @@ use std::{fs, time::Instant};
 use tempfile::tempdir;
 use tower_lsp::lsp_types::{Url, WorkspaceFolder};
 
-use lumals::{config::LumalsConfig, index::WorkspaceIndex, parser, syntax::FileId};
+use lymals::{config::LymalsConfig, index::WorkspaceIndex, parser, syntax::FileId};
 
 #[test]
 fn large_files_and_many_workspace_files_establish_baseline_without_panic() {
@@ -19,7 +19,7 @@ fn large_files_and_many_workspace_files_establish_baseline_without_panic() {
         large.push_str(&format!("  key_{index}: value_{index}\n"));
     }
     let started = Instant::now();
-    let parsed = parser::parse_fallback(FileId(1), "large.luma", &large);
+    let parsed = parser::parse_fallback(FileId(1), "large.lyma", &large);
     assert!(parsed.diagnostics.is_empty());
     assert!(
         started.elapsed().as_secs() < 5,
@@ -28,15 +28,15 @@ fn large_files_and_many_workspace_files_establish_baseline_without_panic() {
 
     for index in 0..120 {
         fs::write(
-            root.join(format!("file_{index}.luma")),
+            root.join(format!("file_{index}.lyma")),
             format!("item_{index}: true\n"),
         )
         .unwrap();
     }
-    fs::write(root.join("ignore.txt"), "not luma\n").unwrap();
+    fs::write(root.join("ignore.txt"), "not lyma\n").unwrap();
 
     let started = Instant::now();
-    let index = WorkspaceIndex::load(&[], &workspace, &LumalsConfig::default());
+    let index = WorkspaceIndex::load(&[], &workspace, &LymalsConfig::default());
     assert_eq!(index.documents().len(), 120);
     assert!(
         started.elapsed().as_secs() < 5,
@@ -52,7 +52,7 @@ fn unicode_heavy_file_stays_under_baseline_and_parses() {
     }
 
     let started = Instant::now();
-    let parsed = parser::parse_fallback(FileId(2), "unicode.luma", &text);
+    let parsed = parser::parse_fallback(FileId(2), "unicode.lyma", &text);
 
     assert!(parsed.diagnostics.is_empty());
     assert!(

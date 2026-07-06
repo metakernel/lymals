@@ -4,7 +4,7 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::server;
+use lymals::server;
 
 #[tokio::test(flavor = "current_thread")]
 async fn hover_capabilities_and_markdown_are_stable() {
@@ -19,7 +19,7 @@ async fn hover_capabilities_and_markdown_are_stable() {
 
     let mut writer = client_to_server;
     let mut reader = server_to_client;
-    let uri = Url::parse("file:///workspace/hover.luma").unwrap();
+    let uri = Url::parse("file:///workspace/hover.lyma").unwrap();
 
     send_message(
         &mut writer,
@@ -51,7 +51,7 @@ async fn hover_capabilities_and_markdown_are_stable() {
     let _initialized_log = read_message(&mut reader).await;
 
     let text = concat!(
-        "@import \"./shared.luma\" as shared\n",
+        "@import \"./shared.lyma\" as shared\n",
         "@profile dev\n",
         "let region = ${shared}\n",
         "service:\n",
@@ -68,7 +68,7 @@ async fn hover_capabilities_and_markdown_are_stable() {
             "params": {
                 "textDocument": {
                     "uri": uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": text
                 }
@@ -91,7 +91,7 @@ async fn hover_capabilities_and_markdown_are_stable() {
         concat!(
             "**Directive:** `@import`\n\n",
             "Import a local module and optionally bind it to an alias.\n\n",
-            "```luma\n@import \"./shared.luma\" as shared\n```\n\n",
+            "```lyma\n@import \"./shared.lyma\" as shared\n```\n\n",
             "Spec excerpt: Relative paths and `file:` URIs are allowed; non-`file:` schemes, absolute paths, and parent traversal are rejected by default in parse-only mode.\n\n",
             "**Static node type:** `directive`"
         )
@@ -110,7 +110,7 @@ async fn hover_capabilities_and_markdown_are_stable() {
         concat!(
             "**Alias:** `shared`\n\n",
             "Imported/module alias.\n",
-            "Source path: `./shared.luma`\n",
+            "Source path: `./shared.lyma`\n",
             "Path: `document[1].alias(shared)`\n\n",
             "Available inside parse-only Lua expressions without evaluation.\n\n",
             "**Static node type:** `alias`"

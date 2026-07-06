@@ -19,7 +19,7 @@
 
 ## Deferred or special cases
 
-- `luma` remains optional and feature-gated because v1 stays parse-only by default, with upstream integration behind the local syntax facade.
+- `lyma` remains optional and feature-gated because v1 stays parse-only by default, with upstream integration behind the local syntax facade.
 - `miette` remains in the crate for rich human-facing diagnostics/CLI error presentation even though it was not part of the narrower preferred set.
 - We intentionally do **not** add a direct `dashmap` dependency yet; `parking_lot` covers the current root-bounded workspace/document-state plan with less API commitment.
 
@@ -40,7 +40,7 @@ Use `UPDATE_GOLDENS=1 cargo test --test parser_tests` only when intentionally re
 
 ## Contribution workflow
 
-- Keep changes aligned with the v1 contract: release only raw `lumals` binaries/checksums, keep editor integration docs-only, and do not add Lua execution paths to shipped features.
+- Keep changes aligned with the v1 contract: release only raw `lymals` binaries/checksums, keep editor integration docs-only, and do not add Lua execution paths to shipped features.
 - Run the validation commands above before opening a PR; at minimum, formatting, clippy, tests, docs, and `cargo deny check` should pass locally or in CI.
 - Update user/developer docs when behavior, flags, configuration, safety limits, or packaging scope changes.
 - Add or update focused tests with code changes; use snapshot/golden updates only when the behavior change is intentional.

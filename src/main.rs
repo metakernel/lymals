@@ -41,11 +41,11 @@ where
 
     match command_mode(&cli) {
         CommandMode::Version => {
-            let _ = writeln!(stdout, "{}", lumals::version_banner());
+            let _ = writeln!(stdout, "{}", lymals::version_banner());
             return ExitCode::SUCCESS;
         }
         CommandMode::PrintConfigSchema => {
-            let _ = writeln!(stdout, "{}", lumals::config::config_schema_json());
+            let _ = writeln!(stdout, "{}", lymals::config::config_schema_json());
             return ExitCode::SUCCESS;
         }
         CommandMode::Stdio => {}
@@ -73,7 +73,7 @@ fn run_stdio(_cli: Cli, _stdout: &mut dyn Write, stderr: &mut dyn Write) -> Exit
     runtime.block_on(async {
         let stdin = tokio::io::stdin();
         let stdout = tokio::io::stdout();
-        let (service, socket) = lumals::server::service();
+        let (service, socket) = lymals::server::service();
         Server::new(stdin, stdout, socket).serve(service).await;
     });
 
@@ -109,12 +109,12 @@ mod tests {
         let mut stdout = Vec::new();
         let mut stderr = Vec::new();
 
-        let code = run(["lumals", "--version"], &mut stdout, &mut stderr);
+        let code = run(["lymals", "--version"], &mut stdout, &mut stderr);
 
         assert_eq!(code, std::process::ExitCode::SUCCESS);
         assert_eq!(
             String::from_utf8(stdout).unwrap(),
-            format!("{}\n", lumals::version_banner())
+            format!("{}\n", lymals::version_banner())
         );
         assert!(stderr.is_empty());
     }
@@ -125,7 +125,7 @@ mod tests {
         let mut stderr = Vec::new();
 
         let code = run(
-            ["lumals", "--print-config-schema"],
+            ["lymals", "--print-config-schema"],
             &mut stdout,
             &mut stderr,
         );
@@ -137,13 +137,13 @@ mod tests {
 
     #[test]
     fn default_stdio_mode_does_not_write_to_stdout() {
-        let cli = Cli::parse_from(["lumals"]);
+        let cli = Cli::parse_from(["lymals"]);
         assert_eq!(command_mode(&cli), CommandMode::Stdio);
     }
 
     #[test]
     fn explicit_stdio_flag_is_a_quiet_synonym() {
-        let cli = Cli::parse_from(["lumals", "--stdio"]);
+        let cli = Cli::parse_from(["lymals", "--stdio"]);
         assert_eq!(command_mode(&cli), CommandMode::Stdio);
     }
 }

@@ -6,13 +6,13 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::server;
+use lymals::server;
 
 #[tokio::test(flavor = "current_thread")]
 async fn prepare_rename_and_workspace_edit_cover_lets_aliases_and_static_keys() {
     let workspace = fixture_workspace_uri();
-    let main_uri = fixture_document_uri("workspace/main.luma");
-    let shared_uri = fixture_document_uri("workspace/shared.luma");
+    let main_uri = fixture_document_uri("workspace/main.lyma");
+    let shared_uri = fixture_document_uri("workspace/shared.lyma");
     let (mut writer, mut reader, server_task) = start_server().await;
 
     let initialize = initialize(&mut writer, &mut reader, &workspace).await;
@@ -27,7 +27,7 @@ async fn prepare_rename_and_workspace_edit_cover_lets_aliases_and_static_keys() 
         &mut reader,
         &main_uri,
         concat!(
-            "@import \"./shared.luma\" as shared\n",
+            "@import \"./shared.lyma\" as shared\n",
             "let selected = ${shared.region}\n",
             "service_name: ${selected}\n",
             "selected_copy: ${selected}\n",
@@ -113,7 +113,7 @@ async fn prepare_rename_and_workspace_edit_cover_lets_aliases_and_static_keys() 
 #[tokio::test(flavor = "current_thread")]
 async fn rename_rejects_conflicts_and_unsupported_lua_ranges() {
     let workspace = fixture_workspace_uri();
-    let main_uri = fixture_document_uri("workspace/main.luma");
+    let main_uri = fixture_document_uri("workspace/main.lyma");
     let (mut writer, mut reader, server_task) = start_server().await;
 
     let _initialize = initialize(&mut writer, &mut reader, &workspace).await;
@@ -124,7 +124,7 @@ async fn rename_rejects_conflicts_and_unsupported_lua_ranges() {
         &mut reader,
         &main_uri,
         concat!(
-            "@import \"./shared.luma\" as shared\n",
+            "@import \"./shared.lyma\" as shared\n",
             "let selected = ${shared.region + fn_call(unknown)}\n",
             "let alias = plain\n",
             "region_name: ${selected}\n"
@@ -207,7 +207,7 @@ async fn open_doc(
     send_message(writer, &json!({
         "jsonrpc": "2.0",
         "method": "textDocument/didOpen",
-        "params": {"textDocument": {"uri": uri, "languageId": "luma", "version": 1, "text": text}}
+        "params": {"textDocument": {"uri": uri, "languageId": "lyma", "version": 1, "text": text}}
     })).await;
     let _diagnostics = read_message(reader).await;
 }

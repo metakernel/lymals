@@ -3,9 +3,9 @@ use tower_lsp::lsp_types::{InlayHint, InlayHintParams};
 
 use crate::inlay_hints::{self, InlayHintsRequest};
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_inlay_hints(
         &self,
         params: InlayHintParams,

@@ -1,7 +1,7 @@
 use parking_lot::RwLock;
 use tower_lsp::lsp_types::{ClientCapabilities, TraceValue, Url};
 
-use crate::config::LumalsConfig;
+use crate::config::LymalsConfig;
 use crate::document::{Document, DocumentSnapshot, DocumentStore, DocumentStoreError};
 use crate::syntax::FileId;
 use crate::workspace::{WorkspaceSnapshot, WorkspaceState};
@@ -17,7 +17,7 @@ pub enum LifecyclePhase {
 #[derive(Debug, Clone)]
 pub struct SessionSnapshot {
     pub client_capabilities: ClientCapabilities,
-    pub config: LumalsConfig,
+    pub config: LymalsConfig,
     pub trace: TraceValue,
     pub phase: LifecyclePhase,
     pub workspace: WorkspaceSnapshot,
@@ -34,7 +34,7 @@ impl Default for SessionSnapshot {
     fn default() -> Self {
         Self {
             client_capabilities: ClientCapabilities::default(),
-            config: LumalsConfig::default(),
+            config: LymalsConfig::default(),
             trace: TraceValue::Off,
             phase: LifecyclePhase::Created,
             workspace: WorkspaceSnapshot::default(),
@@ -61,7 +61,7 @@ impl SessionState {
         self.inner.write().trace = trace;
     }
 
-    pub fn set_config(&self, config: LumalsConfig) {
+    pub fn set_config(&self, config: LymalsConfig) {
         self.inner.write().config = config;
     }
 

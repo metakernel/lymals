@@ -10,7 +10,7 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::{parser, server, syntax::ParserBackend};
+use lymals::{parser, server, syntax::ParserBackend};
 
 #[tokio::test(flavor = "current_thread")]
 async fn diagnostics_publish_matches_golden_fixtures() {
@@ -35,7 +35,7 @@ async fn diagnostics_publish_matches_golden_fixtures() {
 fn golden_path(input: &Path) -> PathBuf {
     match parser::backend() {
         ParserBackend::Fallback => input.with_extension("golden"),
-        ParserBackend::UpstreamLuma => input.with_file_name(format!(
+        ParserBackend::UpstreamLyma => input.with_file_name(format!(
             "{}.upstream.golden",
             input.file_stem().unwrap().to_string_lossy()
         )),
@@ -46,7 +46,7 @@ fn fixture_paths(dir: &Path) -> Vec<PathBuf> {
     let mut entries = fs::read_dir(dir)
         .unwrap()
         .map(|entry| entry.unwrap().path())
-        .filter(|path| path.extension().is_some_and(|ext| ext == "luma"))
+        .filter(|path| path.extension().is_some_and(|ext| ext == "lyma"))
         .collect::<Vec<_>>();
     entries.sort();
     entries
@@ -135,7 +135,7 @@ async fn publish_diagnostics(name: &str, text: &str) -> Value {
             "method": "initialize",
             "params": {
                 "processId": null,
-                "clientInfo": { "name": "lumals-test", "version": "0" },
+                "clientInfo": { "name": "lymals-test", "version": "0" },
                 "capabilities": {},
                 "trace": "off"
             }
@@ -163,7 +163,7 @@ async fn publish_diagnostics(name: &str, text: &str) -> Value {
             "params": {
                 "textDocument": {
                     "uri": uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": text
                 }

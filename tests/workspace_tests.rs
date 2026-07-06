@@ -4,21 +4,21 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::{Url, WorkspaceFolder};
 
-use lumals::config::LumalsConfig;
-use lumals::imports::{ImportPolicyError, resolve_guarded_import};
-use lumals::server;
-use lumals::workspace::{self, WorkspaceLumaFilePolicyError};
+use lymals::config::LymalsConfig;
+use lymals::imports::{ImportPolicyError, resolve_guarded_import};
+use lymals::server;
+use lymals::workspace::{self, WorkspaceLymaFilePolicyError};
 
 #[test]
 fn blocks_path_traversal_during_import_resolution() {
     let err = resolve_guarded_import(
-        &Url::parse("file:///workspace/pkg/main.luma").unwrap(),
-        "../escape.luma",
+        &Url::parse("file:///workspace/pkg/main.lyma").unwrap(),
+        "../escape.lyma",
         &[WorkspaceFolder {
             uri: Url::parse("file:///workspace").unwrap(),
             name: "workspace".to_string(),
         }],
-        &LumalsConfig::default(),
+        &LymalsConfig::default(),
     )
     .unwrap_err();
 
@@ -31,7 +31,7 @@ async fn workspace_root_changes_and_file_watches_update_state_and_invalidate_ope
     let workspace_added = tempfile::tempdir().unwrap();
     let workspace_a_uri = Url::from_directory_path(workspace_a.path()).unwrap();
     let workspace_added_uri = Url::from_directory_path(workspace_added.path()).unwrap();
-    let doc_uri = Url::from_file_path(workspace_added.path().join("src/main.luma")).unwrap();
+    let doc_uri = Url::from_file_path(workspace_added.path().join("src/main.lyma")).unwrap();
 
     let (client_to_server, server_stdin) = tokio::io::duplex(16 * 1024);
     let (server_stdout, server_to_client) = tokio::io::duplex(16 * 1024);
@@ -95,7 +95,7 @@ async fn workspace_root_changes_and_file_watches_update_state_and_invalidate_ope
     assert_eq!(
         register_request["params"]["registrations"][0]["registerOptions"]["watchers"][0]["globPattern"]
             ["pattern"],
-        "**/*.luma"
+        "**/*.lyma"
     );
     send_message(
         &mut writer,
@@ -137,7 +137,7 @@ async fn workspace_root_changes_and_file_watches_update_state_and_invalidate_ope
             "params": {
                 "textDocument": {
                     "uri": doc_uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": "let answer = 1"
                 }
@@ -180,51 +180,51 @@ async fn workspace_root_changes_and_file_watches_update_state_and_invalidate_ope
 }
 
 #[test]
-fn workspace_luma_validator_rejects_canonical_targets_outside_roots() {
+fn workspace_lyma_validator_rejects_canonical_targets_outside_roots() {
     let workspace = tempfile::tempdir().unwrap();
     let outside = tempfile::tempdir().unwrap();
-    let outside_path = outside.path().join("escape.luma");
+    let outside_path = outside.path().join("escape.lyma");
     std::fs::write(&outside_path, "root: true\n").unwrap();
 
-    let validated = workspace::validate_workspace_luma_file_uri(
+    let validated = workspace::validate_workspace_lyma_file_uri(
         &Url::from_file_path(&outside_path).unwrap(),
         &[WorkspaceFolder {
             uri: Url::from_directory_path(workspace.path()).unwrap(),
             name: "workspace".to_string(),
         }],
-        &LumalsConfig::default(),
+        &LymalsConfig::default(),
     );
 
     assert_eq!(
         validated.unwrap_err(),
-        WorkspaceLumaFilePolicyError::OutsideAllowedRoots
+        WorkspaceLymaFilePolicyError::OutsideAllowedRoots
     );
 }
 
 #[test]
-fn workspace_luma_validator_rejects_symlink_escape_when_supported() {
+fn workspace_lyma_validator_rejects_symlink_escape_when_supported() {
     let workspace = tempfile::tempdir().unwrap();
     let outside = tempfile::tempdir().unwrap();
-    let outside_path = outside.path().join("escape.luma");
+    let outside_path = outside.path().join("escape.lyma");
     std::fs::write(&outside_path, "root: true\n").unwrap();
 
-    let link_path = workspace.path().join("linked.luma");
+    let link_path = workspace.path().join("linked.lyma");
     if try_create_file_symlink(&outside_path, &link_path).is_err() {
         return;
     }
 
-    let validated = workspace::validate_workspace_luma_file_uri(
+    let validated = workspace::validate_workspace_lyma_file_uri(
         &Url::from_file_path(&link_path).unwrap(),
         &[WorkspaceFolder {
             uri: Url::from_directory_path(workspace.path()).unwrap(),
             name: "workspace".to_string(),
         }],
-        &LumalsConfig::default(),
+        &LymalsConfig::default(),
     );
 
     assert_eq!(
         validated.unwrap_err(),
-        WorkspaceLumaFilePolicyError::OutsideAllowedRoots
+        WorkspaceLymaFilePolicyError::OutsideAllowedRoots
     );
 }
 

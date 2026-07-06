@@ -1,5 +1,5 @@
 mod fallback;
-#[cfg(feature = "upstream-luma")]
+#[cfg(feature = "upstream-lyma")]
 mod upstream;
 
 use crate::{
@@ -67,12 +67,12 @@ pub fn parse_fallback(file_id: FileId, name: &str, text: &str) -> ParsedDocument
 }
 
 fn active() -> &'static dyn ParserAdapter {
-    #[cfg(feature = "upstream-luma")]
+    #[cfg(feature = "upstream-lyma")]
     {
         &upstream::UPSTREAM_PARSER
     }
 
-    #[cfg(not(feature = "upstream-luma"))]
+    #[cfg(not(feature = "upstream-lyma"))]
     {
         &fallback::FALLBACK_PARSER
     }

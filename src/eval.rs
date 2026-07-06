@@ -22,7 +22,7 @@ pub struct EvaluationResult {
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum EvaluationError {
-    #[error("evaluation is disabled; lumals v1 is parse-only")]
+    #[error("evaluation is disabled; lymals v1 is parse-only")]
     Disabled,
     #[error("evaluation is reserved for a future sandboxed extension and is not shipped in v1")]
     Reserved,

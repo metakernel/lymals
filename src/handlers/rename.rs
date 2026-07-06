@@ -5,9 +5,9 @@ use tower_lsp::lsp_types::{
 
 use crate::rename::{self, RenameError, RenameRequest};
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_prepare_rename(
         &self,
         params: TextDocumentPositionParams,

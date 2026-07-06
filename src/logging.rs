@@ -43,7 +43,7 @@ pub fn init_logging(log_file: Option<&Path>) -> anyhow::Result<()> {
 
 pub fn install_panic_hook(log_file: Option<PathBuf>) {
     std::panic::set_hook(Box::new(move |panic_info| {
-        let message = format!("lumals panic: {panic_info}\n");
+        let message = format!("lymals panic: {panic_info}\n");
         if let Some(path) = &log_file
             && let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path)
         {

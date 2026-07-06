@@ -25,4 +25,4 @@ highlight = "all"
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
-allow-git = ["https://github.com/metakernel/luma"]
+allow-git = ["https://github.com/metakernel/lyma"]

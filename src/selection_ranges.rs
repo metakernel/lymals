@@ -38,7 +38,7 @@ pub fn collect(request: SelectionRangesRequest<'_>) -> Option<Vec<SelectionRange
     let parsed = parser::parse_fallback(request.file_id, request.uri.as_str(), request.text);
     let file = match &parsed.file {
         ParsedFile::Fallback(file) => &file.ast,
-        #[cfg(feature = "upstream-luma")]
+        #[cfg(feature = "upstream-lyma")]
         ParsedFile::Upstream(_) => return Some(Vec::new()),
     };
 

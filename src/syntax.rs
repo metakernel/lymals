@@ -8,7 +8,7 @@ pub struct FileId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ParserBackend {
     Fallback,
-    UpstreamLuma,
+    UpstreamLyma,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -121,8 +121,8 @@ pub struct FallbackParsedFile {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParsedFile {
     Fallback(FallbackParsedFile),
-    #[cfg(feature = "upstream-luma")]
-    Upstream(luma::parser::LumaFile),
+    #[cfg(feature = "upstream-lyma")]
+    Upstream(lyma::parser::LymaFile),
 }
 
 impl ParsedFile {
@@ -139,8 +139,8 @@ impl ParsedFile {
     pub fn backend(&self) -> ParserBackend {
         match self {
             Self::Fallback(_) => ParserBackend::Fallback,
-            #[cfg(feature = "upstream-luma")]
-            Self::Upstream(_) => ParserBackend::UpstreamLuma,
+            #[cfg(feature = "upstream-lyma")]
+            Self::Upstream(_) => ParserBackend::UpstreamLyma,
         }
     }
 
@@ -148,7 +148,7 @@ impl ParsedFile {
     pub fn span(&self) -> SourceSpan {
         match self {
             Self::Fallback(file) => file.span,
-            #[cfg(feature = "upstream-luma")]
+            #[cfg(feature = "upstream-lyma")]
             Self::Upstream(file) => map_span(file.span),
         }
     }
@@ -157,7 +157,7 @@ impl ParsedFile {
     pub fn document_spans(&self) -> Vec<SourceSpan> {
         match self {
             Self::Fallback(file) => file.document_spans.clone(),
-            #[cfg(feature = "upstream-luma")]
+            #[cfg(feature = "upstream-lyma")]
             Self::Upstream(file) => file
                 .documents
                 .iter()
@@ -232,8 +232,8 @@ pub struct TextEdit {
     pub text: String,
 }
 
-#[cfg(feature = "upstream-luma")]
+#[cfg(feature = "upstream-lyma")]
 #[must_use]
-pub fn map_span(span: luma::parser::Span) -> SourceSpan {
+pub fn map_span(span: lyma::parser::Span) -> SourceSpan {
     SourceSpan::new(FileId(span.file_id.0), span.start, span.end)
 }

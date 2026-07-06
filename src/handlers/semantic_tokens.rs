@@ -3,9 +3,9 @@ use tower_lsp::lsp_types::{SemanticTokensParams, SemanticTokensResult};
 
 use crate::semantic_tokens;
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_semantic_tokens_full(
         &self,
         params: SemanticTokensParams,

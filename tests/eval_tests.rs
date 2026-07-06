@@ -1,12 +1,12 @@
-use lumals::{
-    config::{EvaluationSettings, LumalsConfig},
+use lymals::{
+    config::{EvaluationSettings, LymalsConfig},
     eval::{EvaluationError, EvaluationRequest, EvaluationState, evaluate, state},
 };
 use std::{fs, path::Path};
 
 #[test]
 fn default_config_keeps_evaluation_disabled() {
-    let config = LumalsConfig::default();
+    let config = LymalsConfig::default();
 
     assert!(!config.evaluation.enabled);
     assert_eq!(state(&config.evaluation), EvaluationState::Disabled);

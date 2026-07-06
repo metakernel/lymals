@@ -3,9 +3,9 @@ use tower_lsp::lsp_types::{Hover, HoverContents, HoverParams, MarkupContent, Mar
 
 use crate::hover::{self, HoverRequest};
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_hover(&self, params: HoverParams) -> Result<Option<Hover>> {
         let uri = params.text_document_position_params.text_document.uri;
         let position = params.text_document_position_params.position;

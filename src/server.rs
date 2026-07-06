@@ -58,23 +58,23 @@ use tower_lsp::{Client, LanguageServer, LspService};
 
 use crate::VERSION;
 use crate::capabilities;
-use crate::config::{CONFIG_SECTION, LumalsConfig};
+use crate::config::{CONFIG_SECTION, LymalsConfig};
 use crate::state::{LifecyclePhase, SessionSnapshot, SessionState};
 use crate::workspace::folders_from_initialize_params;
 
 #[derive(Clone)]
-pub struct LumaLanguageServer {
+pub struct LymaLanguageServer {
     client: Client,
     state: Arc<SessionState>,
 }
 
-impl std::fmt::Debug for LumaLanguageServer {
+impl std::fmt::Debug for LymaLanguageServer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("LumaLanguageServer").finish_non_exhaustive()
+        f.debug_struct("LymaLanguageServer").finish_non_exhaustive()
     }
 }
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub fn new(client: Client) -> Self {
         Self {
             client,
@@ -130,7 +130,7 @@ impl LumaLanguageServer {
     async fn refresh_configuration_from_client(&self) {
         let snapshot = self.state.snapshot();
         if !capabilities::supports_workspace_configuration(&snapshot.client_capabilities) {
-            self.state.set_config(LumalsConfig::default());
+            self.state.set_config(LymalsConfig::default());
             return;
         }
 
@@ -143,7 +143,7 @@ impl LumaLanguageServer {
             .await
         {
             Ok(values) => {
-                let config = values.first().map(LumalsConfig::from_lsp_value).transpose();
+                let config = values.first().map(LymalsConfig::from_lsp_value).transpose();
 
                 match config {
                     Ok(Some(config)) => {
@@ -155,7 +155,7 @@ impl LumaLanguageServer {
                         .await;
                     }
                     Ok(None) => {
-                        self.state.set_config(LumalsConfig::default());
+                        self.state.set_config(LymalsConfig::default());
                         self.trace(
                             "configuration defaults applied",
                             Some(
@@ -166,12 +166,12 @@ impl LumaLanguageServer {
                         .await;
                     }
                     Err(error) => {
-                        self.state.set_config(LumalsConfig::default());
+                        self.state.set_config(LymalsConfig::default());
                         self.client
                             .log_message(
                                 MessageType::WARNING,
                                 format!(
-                                    "lumals configuration was invalid; using defaults: {error}"
+                                    "lymals configuration was invalid; using defaults: {error}"
                                 ),
                             )
                             .await;
@@ -186,12 +186,12 @@ impl LumaLanguageServer {
                 }
             }
             Err(error) => {
-                self.state.set_config(LumalsConfig::default());
+                self.state.set_config(LymalsConfig::default());
                 self.client
                     .log_message(
                         MessageType::WARNING,
                         format!(
-                            "lumals could not read workspace configuration; using defaults: {error}"
+                            "lymals could not read workspace configuration; using defaults: {error}"
                         ),
                     )
                     .await;
@@ -207,7 +207,7 @@ impl LumaLanguageServer {
     }
 
     async fn apply_configuration_value(&self, value: &serde_json::Value) {
-        match LumalsConfig::from_lsp_value(value) {
+        match LymalsConfig::from_lsp_value(value) {
             Ok(config) => {
                 self.state.set_config(config);
                 self.trace(
@@ -217,12 +217,12 @@ impl LumaLanguageServer {
                 .await;
             }
             Err(error) => {
-                self.state.set_config(LumalsConfig::default());
+                self.state.set_config(LymalsConfig::default());
                 self.client
                     .log_message(
                         MessageType::WARNING,
                         format!(
-                            "lumals ignored invalid configuration update; using defaults: {error}"
+                            "lymals ignored invalid configuration update; using defaults: {error}"
                         ),
                     )
                     .await;
@@ -239,7 +239,7 @@ impl LumaLanguageServer {
 }
 
 #[tower_lsp::async_trait]
-impl LanguageServer for LumaLanguageServer {
+impl LanguageServer for LymaLanguageServer {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
         let workspace_folders = folders_from_initialize_params(
             params.workspace_folders.clone(),
@@ -265,9 +265,9 @@ impl LanguageServer for LumaLanguageServer {
     async fn initialized(&self, _: InitializedParams) {
         self.state.mark_initialized();
         self.refresh_configuration_from_client().await;
-        self.register_luma_file_watchers().await;
+        self.register_lyma_file_watchers().await;
         self.client
-            .log_message(MessageType::INFO, "lumals initialized")
+            .log_message(MessageType::INFO, "lymals initialized")
             .await;
         self.trace(
             "server initialized",
@@ -279,7 +279,7 @@ impl LanguageServer for LumaLanguageServer {
     async fn shutdown(&self) -> Result<()> {
         self.state.mark_shutdown();
         self.client
-            .log_message(MessageType::INFO, "lumals shutting down")
+            .log_message(MessageType::INFO, "lymals shutting down")
             .await;
         self.trace(
             "server shutting down",
@@ -434,9 +434,9 @@ impl LanguageServer for LumaLanguageServer {
     }
 }
 
-pub fn service() -> (LspService<LumaLanguageServer>, tower_lsp::ClientSocket) {
-    LspService::build(LumaLanguageServer::new)
-        .custom_method("$/setTrace", LumaLanguageServer::set_trace)
+pub fn service() -> (LspService<LymaLanguageServer>, tower_lsp::ClientSocket) {
+    LspService::build(LymaLanguageServer::new)
+        .custom_method("$/setTrace", LymaLanguageServer::set_trace)
         .finish()
 }
 

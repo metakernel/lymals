@@ -4,7 +4,7 @@ use tower_lsp::lsp_types::{
 
 use crate::{
     ast::{AstFile, Directive, DocumentItem, LetBinding, MappingEntry, Node, Scalar, ScalarKind},
-    config::LumalsConfig,
+    config::LymalsConfig,
     imports::resolve_guarded_import,
     parser,
     position::LineIndex,
@@ -18,7 +18,7 @@ pub struct InlayHintsRequest<'a> {
     pub file_id: FileId,
     pub params: &'a InlayHintParams,
     pub workspace_folders: &'a [WorkspaceFolder],
-    pub config: &'a LumalsConfig,
+    pub config: &'a LymalsConfig,
 }
 
 pub fn collect(request: InlayHintsRequest<'_>) -> Option<Vec<InlayHint>> {
@@ -29,7 +29,7 @@ pub fn collect(request: InlayHintsRequest<'_>) -> Option<Vec<InlayHint>> {
     let parsed = parser::parse_fallback(request.file_id, request.uri.as_str(), request.text);
     let file = match &parsed.file {
         ParsedFile::Fallback(file) => &file.ast,
-        #[cfg(feature = "upstream-luma")]
+        #[cfg(feature = "upstream-lyma")]
         ParsedFile::Upstream(_) => return Some(Vec::new()),
     };
 

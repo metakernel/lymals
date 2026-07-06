@@ -4,7 +4,7 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::server;
+use lymals::server;
 
 #[tokio::test(flavor = "current_thread")]
 async fn text_document_sync_handles_open_change_save_and_close() {
@@ -22,7 +22,7 @@ async fn text_document_sync_handles_open_change_save_and_close() {
 
     let mut writer = client_to_server;
     let mut reader = server_to_client;
-    let uri = Url::parse("file:///workspace/test.luma").unwrap();
+    let uri = Url::parse("file:///workspace/test.lyma").unwrap();
 
     send_message(
         &mut writer,
@@ -32,7 +32,7 @@ async fn text_document_sync_handles_open_change_save_and_close() {
             "method": "initialize",
             "params": {
                 "processId": null,
-                "clientInfo": { "name": "lumals-test", "version": "0" },
+                "clientInfo": { "name": "lymals-test", "version": "0" },
                 "capabilities": {},
                 "trace": "off"
             }
@@ -74,7 +74,7 @@ async fn text_document_sync_handles_open_change_save_and_close() {
             "params": {
                 "textDocument": {
                     "uri": uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": "let broken"
                 }

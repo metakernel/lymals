@@ -3,9 +3,9 @@ use tower_lsp::lsp_types::{CompletionParams, CompletionResponse};
 
 use crate::completion::{self, CompletionRequest};
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_completion(
         &self,
         params: CompletionParams,

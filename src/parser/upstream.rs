@@ -13,13 +13,13 @@ pub(super) struct UpstreamParser;
 
 impl ParserAdapter for UpstreamParser {
     fn backend(&self) -> ParserBackend {
-        ParserBackend::UpstreamLuma
+        ParserBackend::UpstreamLyma
     }
 
     fn parse(&self, file_id: FileId, name: &str, text: &str) -> ParsedDocument {
-        let upstream_file_id = luma::parser::FileId(file_id.0);
-        let parsed = luma::parser::parse_str(upstream_file_id, name, text);
-        let lexed = luma::parser::lex_str(upstream_file_id, name, text);
+        let upstream_file_id = lyma::parser::FileId(file_id.0);
+        let parsed = lyma::parser::parse_str(upstream_file_id, name, text);
+        let lexed = lyma::parser::lex_str(upstream_file_id, name, text);
         let source = map_source(&parsed.source);
         let file = ParsedFile::Upstream(parsed.file.clone());
         let diagnostics = merge_diagnostics(&parsed.diagnostics, &lexed.diagnostics);
@@ -31,7 +31,7 @@ impl ParserAdapter for UpstreamParser {
         };
 
         ParsedDocument {
-            backend: ParserBackend::UpstreamLuma,
+            backend: ParserBackend::UpstreamLyma,
             source,
             file,
             ranges,
@@ -42,8 +42,8 @@ impl ParserAdapter for UpstreamParser {
     }
 
     fn format_document(&self, parsed: &ParsedDocument) -> Option<FormatResult> {
-        let formatted = luma::parser::format_str(
-            luma::parser::FileId(parsed.source.file_id.0),
+        let formatted = lyma::parser::format_str(
+            lyma::parser::FileId(parsed.source.file_id.0),
             &parsed.source.name,
             parsed.source.as_str(),
         );
@@ -56,7 +56,7 @@ impl ParserAdapter for UpstreamParser {
 
     fn format_text_edits(&self, parsed: &ParsedDocument) -> Option<Vec<TextEdit>> {
         let (_, edit) =
-            luma::tooling::format_document_text_edit(&parsed.source.name, parsed.source.as_str());
+            lyma::tooling::format_document_text_edit(&parsed.source.name, parsed.source.as_str());
         Some(vec![TextEdit {
             range: SourceSpan::new(parsed.source.file_id, edit.range.start, edit.range.end),
             text: edit.text,
@@ -64,7 +64,7 @@ impl ParserAdapter for UpstreamParser {
     }
 }
 
-fn map_source(source: &luma::parser::SourceText) -> SourceText {
+fn map_source(source: &lyma::parser::SourceText) -> SourceText {
     SourceText::new(
         FileId(source.source.id.0),
         source.source.name.clone(),
@@ -73,8 +73,8 @@ fn map_source(source: &luma::parser::SourceText) -> SourceText {
 }
 
 fn merge_diagnostics(
-    parsed: &[luma::parser::Diagnostic],
-    lexed: &[luma::parser::Diagnostic],
+    parsed: &[lyma::parser::Diagnostic],
+    lexed: &[lyma::parser::Diagnostic],
 ) -> Vec<Diagnostic> {
     let mut merged = Vec::new();
 
@@ -88,15 +88,15 @@ fn merge_diagnostics(
     merged
 }
 
-fn map_diagnostic(diagnostic: &luma::parser::Diagnostic) -> Diagnostic {
+fn map_diagnostic(diagnostic: &lyma::parser::Diagnostic) -> Diagnostic {
     Diagnostic {
         code: diagnostic.code.code().to_owned(),
         severity: match diagnostic.severity {
-            luma::parser::Severity::Info => DiagnosticSeverity::Info,
-            luma::parser::Severity::Warning => DiagnosticSeverity::Warning,
-            luma::parser::Severity::Error => DiagnosticSeverity::Error,
+            lyma::parser::Severity::Info => DiagnosticSeverity::Info,
+            lyma::parser::Severity::Warning => DiagnosticSeverity::Warning,
+            lyma::parser::Severity::Error => DiagnosticSeverity::Error,
         },
-        source: "luma.parser".to_owned(),
+        source: "lyma.parser".to_owned(),
         message: diagnostic.message.clone(),
         primary_span: diagnostic.primary_span.map(map_span),
         related_spans: diagnostic
@@ -112,40 +112,40 @@ fn map_diagnostic(diagnostic: &luma::parser::Diagnostic) -> Diagnostic {
     }
 }
 
-fn map_token(token: &luma::parser::Token) -> Token {
+fn map_token(token: &lyma::parser::Token) -> Token {
     Token {
         kind: match token.kind {
-            luma::parser::TokenKind::Identifier => TokenKind::Identifier,
-            luma::parser::TokenKind::DirectiveName => TokenKind::DirectiveName,
-            luma::parser::TokenKind::TagName => TokenKind::TagName,
-            luma::parser::TokenKind::Number => TokenKind::Number,
-            luma::parser::TokenKind::String => TokenKind::String,
-            luma::parser::TokenKind::PlainString => TokenKind::PlainString,
-            luma::parser::TokenKind::Comment => TokenKind::Comment,
-            luma::parser::TokenKind::DocumentSeparator => TokenKind::DocumentSeparator,
-            luma::parser::TokenKind::DocumentTerminator => TokenKind::DocumentTerminator,
-            luma::parser::TokenKind::BlockHeader(_) => TokenKind::BlockHeader,
-            luma::parser::TokenKind::Colon => TokenKind::Colon,
-            luma::parser::TokenKind::Dash => TokenKind::Dash,
-            luma::parser::TokenKind::Spread => TokenKind::Spread,
-            luma::parser::TokenKind::Equals => TokenKind::Equals,
-            luma::parser::TokenKind::LeftBracket => TokenKind::LeftBracket,
-            luma::parser::TokenKind::RightBracket => TokenKind::RightBracket,
-            luma::parser::TokenKind::LeftBrace => TokenKind::LeftBrace,
-            luma::parser::TokenKind::RightBrace => TokenKind::RightBrace,
-            luma::parser::TokenKind::KeywordLet => TokenKind::KeywordLet,
-            luma::parser::TokenKind::KeywordAs => TokenKind::KeywordAs,
-            luma::parser::TokenKind::KeywordIn => TokenKind::KeywordIn,
-            luma::parser::TokenKind::LineBreak => TokenKind::LineBreak,
-            luma::parser::TokenKind::EndOfFile => TokenKind::EndOfFile,
-            luma::parser::TokenKind::Error => TokenKind::Error,
+            lyma::parser::TokenKind::Identifier => TokenKind::Identifier,
+            lyma::parser::TokenKind::DirectiveName => TokenKind::DirectiveName,
+            lyma::parser::TokenKind::TagName => TokenKind::TagName,
+            lyma::parser::TokenKind::Number => TokenKind::Number,
+            lyma::parser::TokenKind::String => TokenKind::String,
+            lyma::parser::TokenKind::PlainString => TokenKind::PlainString,
+            lyma::parser::TokenKind::Comment => TokenKind::Comment,
+            lyma::parser::TokenKind::DocumentSeparator => TokenKind::DocumentSeparator,
+            lyma::parser::TokenKind::DocumentTerminator => TokenKind::DocumentTerminator,
+            lyma::parser::TokenKind::BlockHeader(_) => TokenKind::BlockHeader,
+            lyma::parser::TokenKind::Colon => TokenKind::Colon,
+            lyma::parser::TokenKind::Dash => TokenKind::Dash,
+            lyma::parser::TokenKind::Spread => TokenKind::Spread,
+            lyma::parser::TokenKind::Equals => TokenKind::Equals,
+            lyma::parser::TokenKind::LeftBracket => TokenKind::LeftBracket,
+            lyma::parser::TokenKind::RightBracket => TokenKind::RightBracket,
+            lyma::parser::TokenKind::LeftBrace => TokenKind::LeftBrace,
+            lyma::parser::TokenKind::RightBrace => TokenKind::RightBrace,
+            lyma::parser::TokenKind::KeywordLet => TokenKind::KeywordLet,
+            lyma::parser::TokenKind::KeywordAs => TokenKind::KeywordAs,
+            lyma::parser::TokenKind::KeywordIn => TokenKind::KeywordIn,
+            lyma::parser::TokenKind::LineBreak => TokenKind::LineBreak,
+            lyma::parser::TokenKind::EndOfFile => TokenKind::EndOfFile,
+            lyma::parser::TokenKind::Error => TokenKind::Error,
         },
         lexeme: token.lexeme.clone(),
         span: map_span(token.span),
     }
 }
 
-fn extract_symbols(file: &luma::parser::LumaFile) -> Vec<Symbol> {
+fn extract_symbols(file: &lyma::parser::LymaFile) -> Vec<Symbol> {
     let mut symbols = Vec::new();
 
     for (index, document) in file.documents.iter().enumerate() {
@@ -168,9 +168,9 @@ fn extract_symbols(file: &luma::parser::LumaFile) -> Vec<Symbol> {
     symbols
 }
 
-fn collect_document_item_symbols(item: &luma::parser::DocumentItem, symbols: &mut Vec<Symbol>) {
+fn collect_document_item_symbols(item: &lyma::parser::DocumentItem, symbols: &mut Vec<Symbol>) {
     match item {
-        luma::parser::DocumentItem::Directive(directive) => {
+        lyma::parser::DocumentItem::Directive(directive) => {
             symbols.push(Symbol {
                 name: directive_name(directive).to_owned(),
                 kind: SymbolKind::Directive,
@@ -178,7 +178,7 @@ fn collect_document_item_symbols(item: &luma::parser::DocumentItem, symbols: &mu
                 selection_span: map_span(directive_span(directive)),
             });
         }
-        luma::parser::DocumentItem::Let(binding) => {
+        lyma::parser::DocumentItem::Let(binding) => {
             symbols.push(Symbol {
                 name: binding.name.clone(),
                 kind: SymbolKind::Variable,
@@ -187,70 +187,70 @@ fn collect_document_item_symbols(item: &luma::parser::DocumentItem, symbols: &mu
             });
             collect_node_symbols(&binding.value, symbols);
         }
-        luma::parser::DocumentItem::Root(node) => collect_node_symbols(node, symbols),
-        luma::parser::DocumentItem::Comment(_) => {}
+        lyma::parser::DocumentItem::Root(node) => collect_node_symbols(node, symbols),
+        lyma::parser::DocumentItem::Comment(_) => {}
     }
 }
 
-fn collect_node_symbols(node: &luma::parser::LumaNode, symbols: &mut Vec<Symbol>) {
+fn collect_node_symbols(node: &lyma::parser::LymaNode, symbols: &mut Vec<Symbol>) {
     match node {
-        luma::parser::LumaNode::Sequence(sequence) => {
+        lyma::parser::LymaNode::Sequence(sequence) => {
             for item in &sequence.items {
                 match item {
-                    luma::parser::SequenceItem::Value(value) => {
+                    lyma::parser::SequenceItem::Value(value) => {
                         collect_node_symbols(value, symbols)
                     }
-                    luma::parser::SequenceItem::Directive(directive) => symbols.push(Symbol {
+                    lyma::parser::SequenceItem::Directive(directive) => symbols.push(Symbol {
                         name: directive_name(directive).to_owned(),
                         kind: SymbolKind::Directive,
                         span: map_span(directive_span(directive)),
                         selection_span: map_span(directive_span(directive)),
                     }),
-                    luma::parser::SequenceItem::Conditional(block) => {
+                    lyma::parser::SequenceItem::Conditional(block) => {
                         collect_node_symbols(
-                            &luma::parser::LumaNode::Sequence(block.if_branch.body.clone()),
+                            &lyma::parser::LymaNode::Sequence(block.if_branch.body.clone()),
                             symbols,
                         );
                         for branch in &block.else_if_branches {
                             collect_node_symbols(
-                                &luma::parser::LumaNode::Sequence(branch.body.clone()),
+                                &lyma::parser::LymaNode::Sequence(branch.body.clone()),
                                 symbols,
                             );
                         }
                         if let Some(branch) = &block.else_branch {
                             collect_node_symbols(
-                                &luma::parser::LumaNode::Sequence(branch.body.clone()),
+                                &lyma::parser::LymaNode::Sequence(branch.body.clone()),
                                 symbols,
                             );
                         }
                     }
-                    luma::parser::SequenceItem::Loop(block) => {
+                    lyma::parser::SequenceItem::Loop(block) => {
                         collect_node_symbols(
-                            &luma::parser::LumaNode::Sequence(block.body.clone()),
+                            &lyma::parser::LymaNode::Sequence(block.body.clone()),
                             symbols,
                         );
                     }
-                    luma::parser::SequenceItem::Spread(_)
-                    | luma::parser::SequenceItem::Comment(_) => {}
+                    lyma::parser::SequenceItem::Spread(_)
+                    | lyma::parser::SequenceItem::Comment(_) => {}
                 }
             }
         }
-        luma::parser::LumaNode::Mapping(mapping) => {
+        lyma::parser::LymaNode::Mapping(mapping) => {
             for item in &mapping.items {
                 match item {
-                    luma::parser::MappingItem::Entry(entry) => {
+                    lyma::parser::MappingItem::Entry(entry) => {
                         if let Some(symbol) = mapping_key_symbol(entry) {
                             symbols.push(symbol);
                         }
                         collect_node_symbols(&entry.value, symbols);
                     }
-                    luma::parser::MappingItem::Directive(directive) => symbols.push(Symbol {
+                    lyma::parser::MappingItem::Directive(directive) => symbols.push(Symbol {
                         name: directive_name(directive).to_owned(),
                         kind: SymbolKind::Directive,
                         span: map_span(directive_span(directive)),
                         selection_span: map_span(directive_span(directive)),
                     }),
-                    luma::parser::MappingItem::Let(binding) => {
+                    lyma::parser::MappingItem::Let(binding) => {
                         symbols.push(Symbol {
                             name: binding.name.clone(),
                             kind: SymbolKind::Variable,
@@ -259,36 +259,36 @@ fn collect_node_symbols(node: &luma::parser::LumaNode, symbols: &mut Vec<Symbol>
                         });
                         collect_node_symbols(&binding.value, symbols);
                     }
-                    luma::parser::MappingItem::Conditional(block) => {
+                    lyma::parser::MappingItem::Conditional(block) => {
                         collect_node_symbols(
-                            &luma::parser::LumaNode::Mapping(block.if_branch.body.clone()),
+                            &lyma::parser::LymaNode::Mapping(block.if_branch.body.clone()),
                             symbols,
                         );
                         for branch in &block.else_if_branches {
                             collect_node_symbols(
-                                &luma::parser::LumaNode::Mapping(branch.body.clone()),
+                                &lyma::parser::LymaNode::Mapping(branch.body.clone()),
                                 symbols,
                             );
                         }
                         if let Some(branch) = &block.else_branch {
                             collect_node_symbols(
-                                &luma::parser::LumaNode::Mapping(branch.body.clone()),
+                                &lyma::parser::LymaNode::Mapping(branch.body.clone()),
                                 symbols,
                             );
                         }
                     }
-                    luma::parser::MappingItem::Loop(block) => {
+                    lyma::parser::MappingItem::Loop(block) => {
                         collect_node_symbols(
-                            &luma::parser::LumaNode::Mapping(block.body.clone()),
+                            &lyma::parser::LymaNode::Mapping(block.body.clone()),
                             symbols,
                         );
                     }
-                    luma::parser::MappingItem::Spread(_)
-                    | luma::parser::MappingItem::Comment(_) => {}
+                    lyma::parser::MappingItem::Spread(_)
+                    | lyma::parser::MappingItem::Comment(_) => {}
                 }
             }
         }
-        luma::parser::LumaNode::Tagged(tagged) => {
+        lyma::parser::LymaNode::Tagged(tagged) => {
             symbols.push(Symbol {
                 name: tagged.tag.name.value.clone(),
                 kind: SymbolKind::Tag,
@@ -299,57 +299,57 @@ fn collect_node_symbols(node: &luma::parser::LumaNode, symbols: &mut Vec<Symbol>
                 collect_node_symbols(value, symbols);
             }
         }
-        luma::parser::LumaNode::Null { .. }
-        | luma::parser::LumaNode::Boolean { .. }
-        | luma::parser::LumaNode::Number(_)
-        | luma::parser::LumaNode::String(_)
-        | luma::parser::LumaNode::LuaExpression(_)
-        | luma::parser::LumaNode::LuaExpressionBlock(_)
-        | luma::parser::LumaNode::LuaChunk(_)
-        | luma::parser::LumaNode::LuaTableConstructor(_) => {}
+        lyma::parser::LymaNode::Null { .. }
+        | lyma::parser::LymaNode::Boolean { .. }
+        | lyma::parser::LymaNode::Number(_)
+        | lyma::parser::LymaNode::String(_)
+        | lyma::parser::LymaNode::LuaExpression(_)
+        | lyma::parser::LymaNode::LuaExpressionBlock(_)
+        | lyma::parser::LymaNode::LuaChunk(_)
+        | lyma::parser::LymaNode::LuaTableConstructor(_) => {}
     }
 }
 
-fn mapping_key_symbol(entry: &luma::parser::MappingEntry) -> Option<Symbol> {
+fn mapping_key_symbol(entry: &lyma::parser::MappingEntry) -> Option<Symbol> {
     match &entry.key {
-        luma::parser::MappingKey::Plain { value, span } => Some(Symbol {
+        lyma::parser::MappingKey::Plain { value, span } => Some(Symbol {
             name: value.clone(),
             kind: SymbolKind::MappingKey,
             span: map_span(entry.span),
             selection_span: map_span(*span),
         }),
-        luma::parser::MappingKey::Quoted(string) => Some(Symbol {
+        lyma::parser::MappingKey::Quoted(string) => Some(Symbol {
             name: string.value.clone(),
             kind: SymbolKind::MappingKey,
             span: map_span(entry.span),
             selection_span: map_span(string.span),
         }),
-        luma::parser::MappingKey::Expression { .. } => None,
+        lyma::parser::MappingKey::Expression { .. } => None,
     }
 }
 
-fn directive_name(directive: &luma::syntax::Directive) -> &'static str {
+fn directive_name(directive: &lyma::syntax::Directive) -> &'static str {
     match directive {
-        luma::syntax::Directive::Version(_) => "@luma",
-        luma::syntax::Directive::Profile(_) => "@profile",
-        luma::syntax::Directive::Schema(_) => "@schema",
-        luma::syntax::Directive::Import(_) => "@import",
-        luma::syntax::Directive::Include(_) => "@include",
-        luma::syntax::Directive::Use(_) => "@use",
-        luma::syntax::Directive::LuaPrelude(_) => "@lua",
-        luma::syntax::Directive::Meta(_) => "@meta",
+        lyma::syntax::Directive::Version(_) => "@lyma",
+        lyma::syntax::Directive::Profile(_) => "@profile",
+        lyma::syntax::Directive::Schema(_) => "@schema",
+        lyma::syntax::Directive::Import(_) => "@import",
+        lyma::syntax::Directive::Include(_) => "@include",
+        lyma::syntax::Directive::Use(_) => "@use",
+        lyma::syntax::Directive::LuaPrelude(_) => "@lua",
+        lyma::syntax::Directive::Meta(_) => "@meta",
     }
 }
 
-fn directive_span(directive: &luma::syntax::Directive) -> luma::parser::Span {
+fn directive_span(directive: &lyma::syntax::Directive) -> lyma::parser::Span {
     match directive {
-        luma::syntax::Directive::Version(value) => value.span,
-        luma::syntax::Directive::Profile(value) => value.span,
-        luma::syntax::Directive::Schema(value) => value.span,
-        luma::syntax::Directive::Import(value) => value.span,
-        luma::syntax::Directive::Include(value) => value.span,
-        luma::syntax::Directive::Use(value) => value.span,
-        luma::syntax::Directive::LuaPrelude(value) => value.span,
-        luma::syntax::Directive::Meta(value) => value.span,
+        lyma::syntax::Directive::Version(value) => value.span,
+        lyma::syntax::Directive::Profile(value) => value.span,
+        lyma::syntax::Directive::Schema(value) => value.span,
+        lyma::syntax::Directive::Import(value) => value.span,
+        lyma::syntax::Directive::Include(value) => value.span,
+        lyma::syntax::Directive::Use(value) => value.span,
+        lyma::syntax::Directive::LuaPrelude(value) => value.span,
+        lyma::syntax::Directive::Meta(value) => value.span,
     }
 }

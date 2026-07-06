@@ -4,7 +4,7 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::server;
+use lymals::server;
 
 pub struct LspHarness {
     writer: tokio::io::DuplexStream,
@@ -57,7 +57,7 @@ impl LspHarness {
             json!({
                 "textDocument": {
                     "uri": uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": text
                 }

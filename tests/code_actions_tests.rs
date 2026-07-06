@@ -6,12 +6,12 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::server;
+use lymals::server;
 
 #[tokio::test(flavor = "current_thread")]
 async fn code_actions_advertise_supported_kinds_and_return_workspace_edits() {
     let workspace = fixture_workspace_uri();
-    let document_uri = fixture_document_uri("workspace/code-actions.luma");
+    let document_uri = fixture_document_uri("workspace/code-actions.lyma");
     let (mut writer, mut reader, server_task) = start_server().await;
 
     let initialize = initialize(&mut writer, &mut reader, &workspace).await;
@@ -31,8 +31,8 @@ async fn code_actions_advertise_supported_kinds_and_return_workspace_edits() {
         &document_uri,
         concat!(
             "@profil dev\n",
-            "@import \"./b.luma\"\n",
-            "@import \"./a.luma\"\n",
+            "@import \"./b.lyma\"\n",
+            "@import \"./a.lyma\"\n",
             "name:\n",
             "\tenabled: true\n",
             "service: one\n",
@@ -56,7 +56,7 @@ async fn code_actions_advertise_supported_kinds_and_return_workspace_edits() {
     assert!(titles.contains(&"Normalize directive to `@profile`".to_string()));
     assert!(titles.contains(&"Remove duplicate key `service`".to_string()));
     assert!(titles.contains(&"Rename duplicate key to `service_2`".to_string()));
-    assert!(titles.contains(&"Insert @luma 0.1".to_string()));
+    assert!(titles.contains(&"Insert @lyma 0.1".to_string()));
     assert!(titles.contains(&"Organize directives and imports".to_string()));
 
     let edits = action_edits(&response);
@@ -89,17 +89,17 @@ async fn code_actions_advertise_supported_kinds_and_return_workspace_edits() {
         })]
     );
     assert_eq!(
-        edits["Insert @luma 0.1"],
+        edits["Insert @lyma 0.1"],
         vec![json!({
             "range": {"start": {"line": 0, "character": 0}, "end": {"line": 0, "character": 0}},
-            "newText": "@luma 0.1\n"
+            "newText": "@lyma 0.1\n"
         })]
     );
     assert_eq!(
         edits["Organize directives and imports"],
         vec![json!({
             "range": {"start": {"line": 0, "character": 0}, "end": {"line": 3, "character": 0}},
-            "newText": "@import \"./a.luma\"\n@import \"./b.luma\"\n@profil dev\n"
+            "newText": "@import \"./a.lyma\"\n@import \"./b.lyma\"\n@profil dev\n"
         })]
     );
 
@@ -109,7 +109,7 @@ async fn code_actions_advertise_supported_kinds_and_return_workspace_edits() {
 #[tokio::test(flavor = "current_thread")]
 async fn selection_sensitive_code_actions_offer_quote_and_null_fixes() {
     let workspace = fixture_workspace_uri();
-    let document_uri = fixture_document_uri("workspace/code-actions-selection.luma");
+    let document_uri = fixture_document_uri("workspace/code-actions-selection.lyma");
     let (mut writer, mut reader, server_task) = start_server().await;
 
     let _initialize = initialize(&mut writer, &mut reader, &workspace).await;
@@ -218,7 +218,7 @@ async fn open_doc(
     send_message(writer, &json!({
         "jsonrpc": "2.0",
         "method": "textDocument/didOpen",
-        "params": {"textDocument": {"uri": uri, "languageId": "luma", "version": 1, "text": text}}
+        "params": {"textDocument": {"uri": uri, "languageId": "lyma", "version": 1, "text": text}}
     })).await;
     read_message(reader).await
 }

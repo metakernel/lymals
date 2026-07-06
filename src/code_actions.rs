@@ -17,7 +17,7 @@ use crate::{
 };
 
 const KNOWN_DIRECTIVES: &[&str] = &[
-    "@luma", "@profile", "@schema", "@import", "@include", "@use", "@lua", "@meta",
+    "@lyma", "@profile", "@schema", "@import", "@include", "@use", "@lua", "@meta",
 ];
 
 const AMBIGUOUS_SCALARS: &[&str] = &["true", "false", "null", "nil", "yes", "no", "on", "off"];
@@ -42,7 +42,7 @@ pub fn collect(request: CodeActionRequest<'_>) -> Vec<CodeActionOrCommand> {
     );
     let syntax = match &parsed.file {
         ParsedFile::Fallback(file) => Some(IndexedSyntax::new(&file.ast, &parsed.source)),
-        #[cfg(feature = "upstream-luma")]
+        #[cfg(feature = "upstream-lyma")]
         ParsedFile::Upstream(_) => None,
     };
 
@@ -97,7 +97,7 @@ pub fn collect(request: CodeActionRequest<'_>) -> Vec<CodeActionOrCommand> {
     push_action(
         &mut actions,
         &mut seen,
-        insert_luma_header_action(request.document, syntax.as_ref()),
+        insert_lyma_header_action(request.document, syntax.as_ref()),
     );
 
     if request.snapshot.config.imports.enabled {
@@ -367,28 +367,28 @@ fn empty_value_to_null_action(
     None
 }
 
-fn insert_luma_header_action(
+fn insert_lyma_header_action(
     document: &Document,
     syntax: Option<&IndexedSyntax<'_>>,
 ) -> Option<CodeAction> {
     if syntax?
         .directives
         .iter()
-        .any(|directive| directive.name == "@luma")
+        .any(|directive| directive.name == "@lyma")
     {
         return None;
     }
 
     let line_ending = preferred_line_ending(&document.text());
     Some(code_action(
-        "Insert @luma 0.1",
+        "Insert @lyma 0.1",
         CodeActionKind::QUICKFIX,
         Vec::new(),
         document,
         vec![edit(
             document,
             SourceSpan::new(document.file_id(), 0, 0),
-            format!("@luma 0.1{line_ending}"),
+            format!("@lyma 0.1{line_ending}"),
         )?],
         false,
     ))
@@ -615,7 +615,7 @@ fn line_for_offset<'a>(lines: &'a [Line<'a>], offset: usize) -> Option<&'a Line<
 fn directive_sort_key(line: &str) -> (usize, String) {
     let name = line.split_whitespace().next().unwrap_or_default();
     let bucket = match name {
-        "@luma" => 0,
+        "@lyma" => 0,
         "@profile" => 1,
         "@schema" => 2,
         "@import" => 3,
@@ -745,11 +745,11 @@ mod tests {
 
     #[test]
     fn collects_expected_quickfixes_and_source_actions() {
-        let uri = Url::parse("file:///workspace/test.luma").unwrap();
+        let uri = Url::parse("file:///workspace/test.lyma").unwrap();
         let document = Document::new(
             uri,
             1,
-            "@profil dev\n@import \"./b.luma\"\n@import \"./a.luma\"\nname:\n  enabled: true\nservice: one\nservice: two\n",
+            "@profil dev\n@import \"./b.lyma\"\n@import \"./a.lyma\"\nname:\n  enabled: true\nservice: one\nservice: two\n",
             FileId(1),
         );
         let diagnostics = vec![
@@ -807,7 +807,7 @@ mod tests {
         assert!(
             titles
                 .iter()
-                .any(|title| title.contains("Insert @luma 0.1"))
+                .any(|title| title.contains("Insert @lyma 0.1"))
         );
         assert!(
             titles

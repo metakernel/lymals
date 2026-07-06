@@ -3,7 +3,7 @@ use std::{fs, time::Instant};
 use tempfile::tempdir;
 use tower_lsp::lsp_types::{Url, WorkspaceFolder};
 
-use lumals::{config::LumalsConfig, index::WorkspaceIndex, parser, syntax::FileId};
+use lymals::{config::LymalsConfig, index::WorkspaceIndex, parser, syntax::FileId};
 
 fn main() {
     let mut text = String::from("root:\n");
@@ -12,7 +12,7 @@ fn main() {
     }
 
     let parse_started = Instant::now();
-    let parsed = parser::parse_fallback(FileId(1), "bench.luma", &text);
+    let parsed = parser::parse_fallback(FileId(1), "bench.lyma", &text);
     println!(
         "parse diagnostics={} elapsed={:?}",
         parsed.diagnostics.len(),
@@ -22,7 +22,7 @@ fn main() {
     let temp = tempdir().expect("tempdir");
     for index in 0..250 {
         fs::write(
-            temp.path().join(format!("file_{index}.luma")),
+            temp.path().join(format!("file_{index}.lyma")),
             format!("key_{index}: true\n"),
         )
         .expect("write fixture");
@@ -33,7 +33,7 @@ fn main() {
     }];
 
     let index_started = Instant::now();
-    let index = WorkspaceIndex::load(&[], &folders, &LumalsConfig::default());
+    let index = WorkspaceIndex::load(&[], &folders, &LymalsConfig::default());
     println!(
         "indexed={} elapsed={:?}",
         index.documents().len(),

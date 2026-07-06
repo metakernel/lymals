@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use lumals::{
+use lymals::{
     ast::{AstFile, DocumentItem, Node, ScalarKind},
     parser,
     syntax::{FileId, ParsedFile, TokenKind},
@@ -37,7 +37,7 @@ fn fixture_paths(dir: &Path) -> Vec<PathBuf> {
     let mut entries = fs::read_dir(dir)
         .unwrap()
         .map(|entry| entry.unwrap().path())
-        .filter(|path| path.extension().is_some_and(|ext| ext == "luma"))
+        .filter(|path| path.extension().is_some_and(|ext| ext == "lyma"))
         .collect::<Vec<_>>();
     entries.sort();
     entries
@@ -45,12 +45,12 @@ fn fixture_paths(dir: &Path) -> Vec<PathBuf> {
 
 fn summarize(
     file: &ParsedFile,
-    diagnostics: &[lumals::diagnostics::Diagnostic],
-    tokens: &[lumals::syntax::Token],
+    diagnostics: &[lymals::diagnostics::Diagnostic],
+    tokens: &[lymals::syntax::Token],
 ) -> String {
     let parsed = match file {
         ParsedFile::Fallback(parsed) => parsed,
-        #[cfg(feature = "upstream-luma")]
+        #[cfg(feature = "upstream-lyma")]
         ParsedFile::Upstream(_) => return "non-fallback backend\n".to_owned(),
     };
 

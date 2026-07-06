@@ -1,11 +1,11 @@
 ---
-@schema "./schema.luma"
+@schema "./schema.lyma"
 catalog:
   - name: widget
   - name: gadget
 ...
 ---
-@include "./partials/base.luma"
+@include "./partials/base.lyma"
 manifest:
   version: 1
   metadata:

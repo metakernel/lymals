@@ -14,9 +14,9 @@ use crate::{
     workspace,
 };
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_execute_command(
         &self,
         params: ExecuteCommandParams,
@@ -163,14 +163,14 @@ impl LumaLanguageServer {
         }
 
         let snapshot = self.state.snapshot();
-        let validated = workspace::validate_workspace_luma_file_uri(
+        let validated = workspace::validate_workspace_lyma_file_uri(
             uri,
             &snapshot.workspace.folders,
             &snapshot.config,
         )
         .map_err(|_| {
             Error::invalid_params(
-                "workspace file must stay within configured roots, resolve to a regular .luma file, and end with .luma",
+                "workspace file must stay within configured roots, resolve to a regular .lyma file, and end with .lyma",
             )
         })?;
 
@@ -206,7 +206,7 @@ fn render_syntax_tree(source: &SourceText, file: &ParsedFile) -> String {
                 }
             }
         }
-        #[cfg(feature = "upstream-luma")]
+        #[cfg(feature = "upstream-lyma")]
         ParsedFile::Upstream(_) => {
             writeln!(&mut out, "File {}", span_label(source, file.span())).ok();
             for (index, span) in file.document_spans().iter().enumerate() {

@@ -1,6 +1,6 @@
 # Configuration
 
-`lumals` reads settings from the `lumals` workspace configuration section.
+`lymals` reads settings from the `lymals` workspace configuration section.
 
 ## Defaults
 
@@ -28,7 +28,7 @@
 
 ```json
 {
-  "lumals": {
+  "lymals": {
     "diagnostics": { "enabled": true },
     "formatting": { "enabled": true },
     "imports": { "enabled": true },
@@ -54,8 +54,8 @@
 
 ## Protocol behavior
 
-- If the client supports `workspace/configuration`, `lumals` requests the `lumals` section after `initialized`.
-- If the client does not support it, or returns invalid data, `lumals` falls back to the defaults above.
+- If the client supports `workspace/configuration`, `lymals` requests the `lymals` section after `initialized`.
+- If the client does not support it, or returns invalid data, `lymals` falls back to the defaults above.
 - `workspace/didChangeConfiguration` updates the active settings; invalid updates also fall back to defaults.
 
 ## Schema
@@ -63,7 +63,7 @@
 Print the generated JSON schema with:
 
 ```text
-lumals --print-config-schema
+lymals --print-config-schema
 ```
 
 ## Evaluation setting
@@ -72,4 +72,4 @@ lumals --print-config-schema
 
 ## Import resolution guardrails
 
-By default, import/include resolution is fail-closed and local-only: `allowedSchemes` defaults to `["file"]`, `allowAbsoluteFileUris` is `false`, targets must stay under workspace folders or explicit `allowedRoots`, and path completion suggests only safe root-bounded local `.luma` files.
+By default, import/include resolution is fail-closed and local-only: `allowedSchemes` defaults to `["file"]`, `allowAbsoluteFileUris` is `false`, targets must stay under workspace folders or explicit `allowedRoots`, and path completion suggests only safe root-bounded local `.lyma` files.

@@ -4,7 +4,7 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::server;
+use lymals::server;
 
 #[tokio::test(flavor = "current_thread")]
 async fn selection_ranges_return_nested_parent_chains() {
@@ -19,7 +19,7 @@ async fn selection_ranges_return_nested_parent_chains() {
 
     let mut writer = client_to_server;
     let mut reader = server_to_client;
-    let uri = Url::parse("file:///workspace/selection-range-any-name-ending.luma").unwrap();
+    let uri = Url::parse("file:///workspace/selection-range-any-name-ending.lyma").unwrap();
 
     send_message(
         &mut writer,
@@ -76,7 +76,7 @@ async fn selection_ranges_return_nested_parent_chains() {
             "params": {
                 "textDocument": {
                     "uri": uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": text
                 }

@@ -7,7 +7,7 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::server;
+use lymals::server;
 
 #[tokio::test(flavor = "current_thread")]
 async fn workspace_symbols_cover_workspace_files_open_docs_and_kind_path_queries() {
@@ -17,23 +17,23 @@ async fn workspace_symbols_cover_workspace_files_open_docs_and_kind_path_queries
 
     write_workspace_file(
         workspace_one.path(),
-        "main.luma",
+        "main.lyma",
         concat!(
             "@schema Service\n",
-            "@import \"./shared.luma\" as shared\n",
+            "@import \"./shared.lyma\" as shared\n",
             "let selected = ${shared.region}\n",
             "service: ${selected}\n",
             "!Service \"api\"\n"
         ),
     );
-    write_workspace_file(workspace_one.path(), "shared.luma", "region: us-east-1\n");
+    write_workspace_file(workspace_one.path(), "shared.lyma", "region: us-east-1\n");
     write_workspace_file(
         workspace_two.path(),
-        "paths.luma",
-        "@include \"./partials/base.luma\"\n",
+        "paths.lyma",
+        "@include \"./partials/base.lyma\"\n",
     );
-    write_workspace_file(workspace_two.path(), "partials/base.luma", "title: base\n");
-    write_workspace_file(excluded.path(), "outside.luma", "outside_only: true\n");
+    write_workspace_file(workspace_two.path(), "partials/base.lyma", "title: base\n");
+    write_workspace_file(excluded.path(), "outside.lyma", "outside_only: true\n");
 
     let (mut writer, mut reader, server_task) = spawn_server().await;
     let initialize = initialize(
@@ -50,7 +50,7 @@ async fn workspace_symbols_cover_workspace_files_open_docs_and_kind_path_queries
         true
     );
 
-    let open_uri = file_uri(workspace_one.path(), "scratch.luma");
+    let open_uri = file_uri(workspace_one.path(), "scratch.lyma");
     send_message(
         &mut writer,
         &json!({
@@ -59,7 +59,7 @@ async fn workspace_symbols_cover_workspace_files_open_docs_and_kind_path_queries
             "params": {
                 "textDocument": {
                     "uri": open_uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": "open_only: yes\n"
                 }
@@ -70,19 +70,19 @@ async fn workspace_symbols_cover_workspace_files_open_docs_and_kind_path_queries
     let _diagnostics = read_message(&mut reader).await;
 
     let schema = workspace_symbol(&mut writer, &mut reader, 10, "schema").await;
-    assert_has_symbol(&schema, "Service", "main.luma");
+    assert_has_symbol(&schema, "Service", "main.lyma");
 
     let fuzzy = workspace_symbol(&mut writer, &mut reader, 11, "slctd").await;
-    assert_has_symbol(&fuzzy, "selected", "main.luma");
+    assert_has_symbol(&fuzzy, "selected", "main.lyma");
 
-    let path = workspace_symbol(&mut writer, &mut reader, 12, "base.luma").await;
-    assert_has_symbol(&path, "./partials/base.luma", "paths.luma");
+    let path = workspace_symbol(&mut writer, &mut reader, 12, "base.lyma").await;
+    assert_has_symbol(&path, "./partials/base.lyma", "paths.lyma");
 
     let tag = workspace_symbol(&mut writer, &mut reader, 13, "tag").await;
-    assert_has_symbol(&tag, "!Service", "main.luma");
+    assert_has_symbol(&tag, "!Service", "main.lyma");
 
     let open = workspace_symbol(&mut writer, &mut reader, 14, "open_only").await;
-    assert_has_symbol(&open, "open_only", "scratch.luma");
+    assert_has_symbol(&open, "open_only", "scratch.lyma");
 
     let filtered = workspace_symbol(&mut writer, &mut reader, 15, "outside_only").await;
     assert!(
@@ -96,17 +96,17 @@ async fn workspace_symbols_cover_workspace_files_open_docs_and_kind_path_queries
 #[tokio::test(flavor = "current_thread")]
 async fn workspace_symbols_drop_deleted_files_after_watched_invalidation() {
     let workspace = TempDir::new().unwrap();
-    write_workspace_file(workspace.path(), "stale.luma", "stale_key: true\n");
+    write_workspace_file(workspace.path(), "stale.lyma", "stale_key: true\n");
 
-    let stale_uri = file_uri(workspace.path(), "stale.luma");
+    let stale_uri = file_uri(workspace.path(), "stale.lyma");
     let (mut writer, mut reader, server_task) = spawn_server().await;
     let _initialize =
         initialize(&mut writer, &mut reader, &[workspace_uri(workspace.path())]).await;
 
     let before = workspace_symbol(&mut writer, &mut reader, 20, "stale_key").await;
-    assert_has_symbol(&before, "stale_key", "stale.luma");
+    assert_has_symbol(&before, "stale_key", "stale.lyma");
 
-    fs::remove_file(workspace.path().join("stale.luma")).unwrap();
+    fs::remove_file(workspace.path().join("stale.lyma")).unwrap();
     send_message(
         &mut writer,
         &json!({

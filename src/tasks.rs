@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn versioned_guard_rejects_stale_results() {
-        let guard = VersionedDocumentGuard::new(Url::parse("file:///test.luma").unwrap(), 2);
+        let guard = VersionedDocumentGuard::new(Url::parse("file:///test.lyma").unwrap(), 2);
 
         assert!(guard.is_current(Some(2)));
         assert!(!guard.is_current(Some(3)));

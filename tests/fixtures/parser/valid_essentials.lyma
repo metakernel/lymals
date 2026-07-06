@@ -1,8 +1,8 @@
 ---
-@luma 1
-@import "./common.luma"
-@include "./shared.luma"
-@use "./widgets.luma"
+@lyma 1
+@import "./common.lyma"
+@include "./shared.lyma"
+@use "./widgets.lyma"
 @meta owner=team
 # parser essentials
 let env = ${mode}

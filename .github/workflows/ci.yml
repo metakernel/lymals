@@ -49,10 +49,10 @@ jobs:
         run: cargo doc --workspace --all-features --no-deps
 
       - name: Version smoke test
-        run: cargo run --bin lumals -- --version
+        run: cargo run --bin lymals -- --version
 
       - name: Config schema smoke test
-        run: cargo run --bin lumals -- --print-config-schema
+        run: cargo run --bin lymals -- --print-config-schema
 
   deny:
     name: cargo-deny

@@ -10,11 +10,11 @@ use support::LspHarness;
 async fn harness_drives_lifecycle_sync_diagnostics_and_requests() {
     let temp = tempdir().unwrap();
     let root_uri = Url::from_directory_path(temp.path()).unwrap();
-    let doc_uri = Url::from_file_path(temp.path().join("main.luma")).unwrap();
+    let doc_uri = Url::from_file_path(temp.path().join("main.lyma")).unwrap();
     let mut harness = LspHarness::start().await;
 
     let initialize = harness.initialize(&root_uri).await;
-    assert_eq!(initialize["result"]["serverInfo"]["name"], "lumals");
+    assert_eq!(initialize["result"]["serverInfo"]["name"], "lymals");
 
     let initialized_log = harness.initialized().await;
     assert_eq!(initialized_log["method"], "window/logMessage");

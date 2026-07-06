@@ -6,32 +6,32 @@ use tower_lsp::lsp_types::{
 };
 
 use crate::{
-    config::LumalsConfig,
+    config::LymalsConfig,
     imports::resolve_guarded_import,
     parser,
     semantic::SemanticDocument,
     symbols::DefinitionKind,
-    workspace::{effective_roots, file_url_to_path, is_workspace_luma_uri},
+    workspace::{effective_roots, file_url_to_path, is_workspace_lyma_uri},
 };
 
 const DIRECTIVES: &[DirectiveSpec] = &[
     DirectiveSpec::new(
         "@import",
         "Import a local module",
-        "@import \"${1:./shared.luma}\" as ${2:shared}",
+        "@import \"${1:./shared.lyma}\" as ${2:shared}",
     ),
     DirectiveSpec::new(
         "@include",
         "Include a local document",
-        "@include \"${1:./partials/base.luma}\"",
+        "@include \"${1:./partials/base.lyma}\"",
     ),
     DirectiveSpec::new(
         "@use",
         "Use a local module alias",
-        "@use \"${1:./modules/network.luma}\" as ${2:network}",
+        "@use \"${1:./modules/network.lyma}\" as ${2:network}",
     ),
     DirectiveSpec::new("@profile", "Select a profile", "@profile ${1:dev}"),
-    DirectiveSpec::new("@luma", "Declare the Luma version", "@luma ${1:1}"),
+    DirectiveSpec::new("@lyma", "Declare the Lyma version", "@lyma ${1:1}"),
 ];
 
 const PROFILE_VALUES: &[&str] = &[
@@ -65,7 +65,7 @@ pub struct CompletionRequest<'a> {
     pub file_id: crate::syntax::FileId,
     pub position: Position,
     pub workspace_folders: &'a [WorkspaceFolder],
-    pub config: &'a LumalsConfig,
+    pub config: &'a LymalsConfig,
 }
 
 pub fn complete(request: CompletionRequest<'_>) -> Option<CompletionResponse> {
@@ -137,7 +137,7 @@ impl CompletionCorpus {
         current_text: &str,
         file_id: crate::syntax::FileId,
         workspace_folders: &[WorkspaceFolder],
-        config: &LumalsConfig,
+        config: &LymalsConfig,
     ) -> Self {
         let mut corpus = Self::default();
         corpus.ingest(current_uri.as_str(), current_text, file_id);
@@ -151,7 +151,7 @@ impl CompletionCorpus {
         let mut indexed = 0u32;
 
         for root in effective_roots(workspace_folders, config) {
-            walk_luma_files(&root, &mut |path| {
+            walk_lyma_files(&root, &mut |path| {
                 if indexed >= config.max_indexed_files_per_workspace {
                     return;
                 }
@@ -161,7 +161,7 @@ impl CompletionCorpus {
                 let Ok(uri) = Url::from_file_path(path) else {
                     return;
                 };
-                if !is_workspace_luma_uri(&uri, workspace_folders, config) {
+                if !is_workspace_lyma_uri(&uri, workspace_folders, config) {
                     return;
                 }
                 let Ok(metadata) = fs::metadata(path) else {
@@ -185,7 +185,7 @@ impl CompletionCorpus {
         let parsed = parser::parse_fallback(file_id, name, text);
         let file = match parsed.file {
             crate::syntax::ParsedFile::Fallback(file) => file,
-            #[cfg(feature = "upstream-luma")]
+            #[cfg(feature = "upstream-lyma")]
             crate::syntax::ParsedFile::Upstream(_) => return,
         };
         let semantic = SemanticDocument::from_ast(&file.ast);
@@ -311,7 +311,7 @@ fn path_items(
     let mut items = Vec::new();
     let mut seen = BTreeSet::new();
     for candidate in
-        collect_relative_luma_paths(base_dir, request.workspace_folders, request.config)
+        collect_relative_lyma_paths(base_dir, request.workspace_folders, request.config)
     {
         if !candidate.starts_with(path_prefix) || !seen.insert(candidate.clone()) {
             continue;
@@ -510,16 +510,16 @@ fn alias_from_target(target: &str) -> Option<String> {
         .filter(|stem| !stem.is_empty())
 }
 
-fn collect_relative_luma_paths(
+fn collect_relative_lyma_paths(
     base_dir: &Path,
     workspace_folders: &[WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Vec<String> {
     let mut out = Vec::new();
     let roots = effective_roots(workspace_folders, config);
 
     for root in roots {
-        walk_luma_files(&root, &mut |path| {
+        walk_lyma_files(&root, &mut |path| {
             if let Ok(relative) = path.strip_prefix(base_dir) {
                 let rendered = render_relative_path(relative);
                 if !rendered.is_empty() {
@@ -550,7 +550,7 @@ fn render_relative_path(path: &Path) -> String {
     }
 }
 
-fn walk_luma_files(root: &Path, visit: &mut dyn FnMut(&Path)) {
+fn walk_lyma_files(root: &Path, visit: &mut dyn FnMut(&Path)) {
     let Ok(entries) = fs::read_dir(root) else {
         return;
     };
@@ -561,8 +561,8 @@ fn walk_luma_files(root: &Path, visit: &mut dyn FnMut(&Path)) {
             continue;
         };
         if file_type.is_dir() {
-            walk_luma_files(&path, visit);
-        } else if file_type.is_file() && path.extension().is_some_and(|ext| ext == "luma") {
+            walk_lyma_files(&path, visit);
+        } else if file_type.is_file() && path.extension().is_some_and(|ext| ext == "lyma") {
             visit(&path);
         }
     }

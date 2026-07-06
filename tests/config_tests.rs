@@ -3,12 +3,12 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 
-use lumals::config::LumalsConfig;
-use lumals::server;
+use lymals::config::LymalsConfig;
+use lymals::server;
 
 #[test]
 fn config_defaults_match_expected_policy() {
-    let config = LumalsConfig::default();
+    let config = LymalsConfig::default();
 
     assert!(config.diagnostics.enabled);
     assert!(config.formatting.enabled);
@@ -26,7 +26,7 @@ fn config_defaults_match_expected_policy() {
 
 #[test]
 fn config_overrides_deserialize_from_partial_settings() {
-    let config: LumalsConfig = serde_json::from_value(json!({
+    let config: LymalsConfig = serde_json::from_value(json!({
         "diagnostics": { "enabled": false },
         "semanticTokens": { "enabled": false },
         "completion": { "enabled": false },
@@ -47,10 +47,10 @@ fn config_overrides_deserialize_from_partial_settings() {
     assert!(!config.semantic_tokens.enabled);
     assert!(!config.completion.enabled);
     assert!(!config.inlay_hints.enabled);
-    assert_eq!(config.log_level, lumals::config::LogLevel::Trace);
+    assert_eq!(config.log_level, lymals::config::LogLevel::Trace);
     assert_eq!(
         config.parser_backend,
-        lumals::config::ParserBackend::Fallback
+        lymals::config::ParserBackend::Fallback
     );
     assert_eq!(config.allowed_schemes, ["file", "untitled"]);
     assert_eq!(config.allowed_roots, ["file:///workspace"]);
@@ -64,9 +64,9 @@ fn config_overrides_deserialize_from_partial_settings() {
 
 #[test]
 fn generated_schema_exposes_defaults_and_sections() {
-    let schema = lumals::config::config_schema();
+    let schema = lymals::config::config_schema();
 
-    assert_eq!(schema["$id"], "https://lumals.dev/schemas/lumals.json");
+    assert_eq!(schema["$id"], "https://lymals.dev/schemas/lymals.json");
     assert_eq!(schema["properties"]["allowedSchemes"]["default"][0], "file");
     assert_eq!(
         schema["properties"]["diagnostics"]["default"]["enabled"],
@@ -103,7 +103,7 @@ async fn initializes_with_workspace_configuration_when_client_supports_it() {
             "method": "initialize",
             "params": {
                 "processId": null,
-                "clientInfo": { "name": "lumals-test", "version": "0" },
+                "clientInfo": { "name": "lymals-test", "version": "0" },
                 "capabilities": {
                     "workspace": {
                         "configuration": true
@@ -131,7 +131,7 @@ async fn initializes_with_workspace_configuration_when_client_supports_it() {
     assert_eq!(configuration_request["method"], "workspace/configuration");
     assert_eq!(
         configuration_request["params"]["items"][0]["section"],
-        "lumals"
+        "lymals"
     );
 
     send_message(
@@ -154,7 +154,7 @@ async fn initializes_with_workspace_configuration_when_client_supports_it() {
     let snapshot = backend.state_snapshot();
     assert!(!snapshot.config.diagnostics.enabled);
     assert!(snapshot.config.evaluation.enabled);
-    assert_eq!(snapshot.config.log_level, lumals::config::LogLevel::Debug);
+    assert_eq!(snapshot.config.log_level, lymals::config::LogLevel::Debug);
     assert_eq!(snapshot.config.max_resolve_depth, 7);
 
     shutdown_server(&mut writer, &mut reader, server_task).await;
@@ -185,7 +185,7 @@ async fn falls_back_to_defaults_without_workspace_configuration_support() {
             "method": "initialize",
             "params": {
                 "processId": null,
-                "clientInfo": { "name": "lumals-test", "version": "0" },
+                "clientInfo": { "name": "lymals-test", "version": "0" },
                 "capabilities": {}
             }
         }),
@@ -208,7 +208,7 @@ async fn falls_back_to_defaults_without_workspace_configuration_support() {
     assert_eq!(initialized_log["method"], "window/logMessage");
 
     let snapshot = backend.state_snapshot();
-    assert_eq!(snapshot.config, LumalsConfig::default());
+    assert_eq!(snapshot.config, LymalsConfig::default());
 
     shutdown_server(&mut writer, &mut reader, server_task).await;
 }

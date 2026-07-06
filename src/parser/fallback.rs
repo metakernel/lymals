@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "upstream-luma", allow(dead_code))]
+#![cfg_attr(feature = "upstream-lyma", allow(dead_code))]
 
 use crate::{
     ast::{
@@ -451,7 +451,7 @@ impl<'a> Parser<'a> {
 
     fn error(&mut self, code: &str, message: &str, span: SourceSpan) {
         let mut diagnostic =
-            Diagnostic::new(code, DiagnosticSeverity::Error, message).with_source("lumals.parser");
+            Diagnostic::new(code, DiagnosticSeverity::Error, message).with_source("lymals.parser");
         diagnostic.primary_span = Some(span);
         self.diagnostics.push(diagnostic);
     }

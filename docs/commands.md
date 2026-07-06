@@ -1,27 +1,27 @@
-# lumals commands
+# lymals commands
 
 All built-in commands are parse-only and return data without executing Lua or mutating files.
 
 ## Registered commands
 
-- `lumals.restartIndex`
+- `lymals.restartIndex`
   - Arguments: none
   - Returns workspace/open-document indexing stats after a safe rebuild.
-- `lumals.showSyntaxTree`
-  - Arguments: `[{ "uri": "file:///path/to/file.luma" }]` or `[
-    "file:///path/to/file.luma"
+- `lymals.showSyntaxTree`
+  - Arguments: `[{ "uri": "file:///path/to/file.lyma" }]` or `[
+    "file:///path/to/file.lyma"
     ]`
-  - Returns a textual tree rendered from lumals' local syntax facade; parse-only and read-only.
-- `lumals.showConfig`
+  - Returns a textual tree rendered from lymals' local syntax facade; parse-only and read-only.
+- `lymals.showConfig`
   - Arguments: none
-  - Returns the active `lumals` configuration and workspace folders.
-- `lumals.formatWorkspaceFile`
-  - Arguments: `[{ "uri": "file:///path/to/file.luma" }]`
-  - Returns formatted text for a workspace-bounded `.luma` file without writing it or mutating any file.
-- `lumals.explainDiagnostic`
+  - Returns the active `lymals` configuration and workspace folders.
+- `lymals.formatWorkspaceFile`
+  - Arguments: `[{ "uri": "file:///path/to/file.lyma" }]`
+  - Returns formatted text for a workspace-bounded `.lyma` file without writing it or mutating any file.
+- `lymals.explainDiagnostic`
   - Arguments: `[{ "code": "L003" }]` or `["L003"]`
   - Returns a short explanation and remediation for a known diagnostic code.
-- `lumals.serverStatus`
+- `lymals.serverStatus`
   - Arguments: none
   - Returns lifecycle, trace, log-level, workspace, open-document, and watcher invalidation status for troubleshooting.
 

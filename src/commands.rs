@@ -1,12 +1,12 @@
 use serde_json::Value;
 use tower_lsp::{jsonrpc::Error, lsp_types::Url};
 
-pub const RESTART_INDEX: &str = "lumals.restartIndex";
-pub const SHOW_SYNTAX_TREE: &str = "lumals.showSyntaxTree";
-pub const SHOW_CONFIG: &str = "lumals.showConfig";
-pub const FORMAT_WORKSPACE_FILE: &str = "lumals.formatWorkspaceFile";
-pub const EXPLAIN_DIAGNOSTIC: &str = "lumals.explainDiagnostic";
-pub const SERVER_STATUS: &str = "lumals.serverStatus";
+pub const RESTART_INDEX: &str = "lymals.restartIndex";
+pub const SHOW_SYNTAX_TREE: &str = "lymals.showSyntaxTree";
+pub const SHOW_CONFIG: &str = "lymals.showConfig";
+pub const FORMAT_WORKSPACE_FILE: &str = "lymals.formatWorkspaceFile";
+pub const EXPLAIN_DIAGNOSTIC: &str = "lymals.explainDiagnostic";
+pub const SERVER_STATUS: &str = "lymals.serverStatus";
 
 pub const ALL: &[&str] = &[
     RESTART_INDEX,
@@ -104,13 +104,13 @@ pub fn parse_uri_argument(command: Command, arguments: &[Value]) -> Result<Url, 
 pub fn parse_diagnostic_code_argument(arguments: &[Value]) -> Result<String, Error> {
     let Some(argument) = arguments.first() else {
         return Err(Error::invalid_params(
-            "lumals.explainDiagnostic expects a single diagnostic code argument",
+            "lymals.explainDiagnostic expects a single diagnostic code argument",
         ));
     };
 
     if arguments.len() != 1 {
         return Err(Error::invalid_params(
-            "lumals.explainDiagnostic expects a single diagnostic code argument",
+            "lymals.explainDiagnostic expects a single diagnostic code argument",
         ));
     }
 
@@ -118,12 +118,12 @@ pub fn parse_diagnostic_code_argument(arguments: &[Value]) -> Result<String, Err
         Value::String(code) => code.as_str(),
         Value::Object(object) => object.get("code").and_then(Value::as_str).ok_or_else(|| {
             Error::invalid_params(
-                "lumals.explainDiagnostic expects a single diagnostic code argument",
+                "lymals.explainDiagnostic expects a single diagnostic code argument",
             )
         })?,
         _ => {
             return Err(Error::invalid_params(
-                "lumals.explainDiagnostic expects a single diagnostic code argument",
+                "lymals.explainDiagnostic expects a single diagnostic code argument",
             ));
         }
     };
@@ -148,7 +148,7 @@ pub fn diagnostic_explanation(code: &str) -> Option<(&'static str, &'static str)
         ),
         "L003" => (
             "Tab indentation",
-            "Replace indentation tabs with spaces; lumals expects multiples of two spaces.",
+            "Replace indentation tabs with spaces; lymals expects multiples of two spaces.",
         ),
         "L004" => (
             "Odd indentation width",
@@ -172,7 +172,7 @@ pub fn diagnostic_explanation(code: &str) -> Option<(&'static str, &'static str)
         ),
         "L009" => (
             "Unknown directive",
-            "Use a supported directive such as @luma, @schema, @import, or @include.",
+            "Use a supported directive such as @lyma, @schema, @import, or @include.",
         ),
         "L010" => (
             "Disallowed import scheme",
@@ -208,7 +208,7 @@ pub fn diagnostic_explanation(code: &str) -> Option<(&'static str, &'static str)
         ),
         "L019" => (
             "Missing import/include target",
-            "Create the referenced local .luma file or update the directive path.",
+            "Create the referenced local .lyma file or update the directive path.",
         ),
         "L020" => (
             "Import/include target too large",
@@ -216,7 +216,7 @@ pub fn diagnostic_explanation(code: &str) -> Option<(&'static str, &'static str)
         ),
         "L021" => (
             "Import/include cycle",
-            "Break the cycle between imported or included .luma files.",
+            "Break the cycle between imported or included .lyma files.",
         ),
         "L022" => (
             "Invalid import/include target",
@@ -259,12 +259,12 @@ mod tests {
     fn uri_argument_accepts_string_and_object_forms() {
         let string = parse_uri_argument(
             Command::ShowSyntaxTree,
-            &[json!("file:///workspace/test.luma")],
+            &[json!("file:///workspace/test.lyma")],
         )
         .unwrap();
         let object = parse_uri_argument(
             Command::ShowSyntaxTree,
-            &[json!({ "uri": "file:///workspace/test.luma" })],
+            &[json!({ "uri": "file:///workspace/test.lyma" })],
         )
         .unwrap();
 

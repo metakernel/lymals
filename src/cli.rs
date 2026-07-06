@@ -4,9 +4,9 @@ use clap::{ArgAction, Parser};
 
 #[derive(Debug, Clone, Parser, PartialEq, Eq)]
 #[command(
-    name = "lumals",
+    name = "lymals",
     disable_version_flag = true,
-    about = "Parse-only Luma language server"
+    about = "Parse-only Lyma language server"
 )]
 pub struct Cli {
     /// Explicit stdio transport synonym for editor/client configuration.
@@ -36,12 +36,12 @@ mod tests {
     #[test]
     fn parses_cli_flags() {
         let cli = Cli::parse_from([
-            "lumals",
+            "lymals",
             "--stdio",
             "--version",
             "--print-config-schema",
             "--log-file",
-            "lumals.log",
+            "lymals.log",
         ]);
 
         assert!(cli.stdio);
@@ -49,13 +49,13 @@ mod tests {
         assert!(cli.print_config_schema);
         assert_eq!(
             cli.log_file.as_deref(),
-            Some(std::path::Path::new("lumals.log"))
+            Some(std::path::Path::new("lymals.log"))
         );
     }
 
     #[test]
     fn config_schema_is_valid_json() {
-        let schema: Value = serde_json::from_str(&lumals::config::config_schema_json()).unwrap();
+        let schema: Value = serde_json::from_str(&lymals::config::config_schema_json()).unwrap();
 
         assert_eq!(schema["type"], "object");
         assert_eq!(schema["properties"]["allowedSchemes"]["default"][0], "file");

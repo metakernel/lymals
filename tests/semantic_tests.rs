@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use lumals::{
+use lymals::{
     ast::{
         AstFile, Directive, Document, DocumentItem, LetBinding, Mapping, MappingEntry, Node,
         Scalar, ScalarKind, Sequence, SequenceItem, TagNode,
@@ -22,19 +22,19 @@ fn semantic_index_matches_golden_fixture() {
             separator_span: Some(span(file_id, 0, 3)),
             items: vec![
                 DocumentItem::Directive(Directive {
-                    name: "@luma".to_string(),
+                    name: "@lyma".to_string(),
                     span: span(file_id, 0, 10),
                     value: Some("1".to_string()),
                 }),
                 DocumentItem::Directive(Directive {
                     name: "@import".to_string(),
                     span: span(file_id, 11, 40),
-                    value: Some("\"./shared.luma\" as shared".to_string()),
+                    value: Some("\"./shared.lyma\" as shared".to_string()),
                 }),
                 DocumentItem::Directive(Directive {
                     name: "@include".to_string(),
                     span: span(file_id, 41, 70),
-                    value: Some("partials/base.luma".to_string()),
+                    value: Some("partials/base.lyma".to_string()),
                 }),
                 DocumentItem::Let(LetBinding {
                     name: "region".to_string(),
@@ -151,7 +151,7 @@ fn semantic_index_matches_golden_fixture() {
 #[test]
 fn workspace_index_invalidates_documents() {
     let file_id = FileId(1);
-    let uri = Url::parse("file:///workspace/main.luma").unwrap();
+    let uri = Url::parse("file:///workspace/main.lyma").unwrap();
     let ast = AstFile {
         span: span(file_id, 0, 10),
         documents: vec![Document {
@@ -160,7 +160,7 @@ fn workspace_index_invalidates_documents() {
             items: vec![DocumentItem::Directive(Directive {
                 name: "@import".to_string(),
                 span: span(file_id, 0, 10),
-                value: Some("dep.luma as dep".to_string()),
+                value: Some("dep.lyma as dep".to_string()),
             })],
         }],
     };

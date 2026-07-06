@@ -199,7 +199,7 @@ mod tests {
                     DocumentItem::Directive(Directive {
                         name: "@import".to_string(),
                         span: SourceSpan::new(file_id, 0, 10),
-                        value: Some("\"shared.luma\" as shared".to_string()),
+                        value: Some("\"shared.lyma\" as shared".to_string()),
                     }),
                     DocumentItem::Let(LetBinding {
                         name: "env".to_string(),
@@ -217,7 +217,7 @@ mod tests {
             .map(|definition| definition.name.as_str())
             .collect::<Vec<_>>();
 
-        assert!(names.contains(&"shared.luma"));
+        assert!(names.contains(&"shared.lyma"));
         assert!(names.contains(&"shared"));
         assert!(names.contains(&"env"));
     }

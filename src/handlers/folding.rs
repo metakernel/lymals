@@ -3,9 +3,9 @@ use tower_lsp::lsp_types::{FoldingRange, FoldingRangeParams};
 
 use crate::folding::{self, FoldingRangesRequest};
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_folding_ranges(
         &self,
         params: FoldingRangeParams,

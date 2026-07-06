@@ -1,6 +1,6 @@
 # Packaging and releases
 
-v1 releases publish only standalone `lumals` binary archives plus SHA-256 checksum files.
+v1 releases publish only standalone `lymals` binary archives plus SHA-256 checksum files.
 
 Publishing guardrail: do **not** publish crates, editor packages, marketplace extensions, or GitHub releases until all of the following are complete for the candidate release:
 
@@ -10,9 +10,9 @@ Publishing guardrail: do **not** publish crates, editor packages, marketplace ex
 
 ## Artifacts
 
-- `lumals-linux-x86_64.tar.gz`
-- `lumals-macos-aarch64.tar.gz`
-- `lumals-windows-x86_64.zip`
+- `lymals-linux-x86_64.tar.gz`
+- `lymals-macos-aarch64.tar.gz`
+- `lymals-windows-x86_64.zip`
 - Matching `*.sha256` files
 
 No VS Code, Zed, Neovim, or other editor-specific packages are published for v1.
@@ -25,15 +25,15 @@ No VS Code, Zed, Neovim, or other editor-specific packages are published for v1.
    - Unix: `shasum -a 256 <archive>`
    - Windows PowerShell: `Get-FileHash -Algorithm SHA256 <archive>`
 3. Extract the archive.
-4. Put `lumals`/`lumals.exe` on your `PATH`, or point your editor configuration at the extracted absolute path.
-5. Confirm the binary works: `lumals --version`.
+4. Put `lymals`/`lymals.exe` on your `PATH`, or point your editor configuration at the extracted absolute path.
+5. Confirm the binary works: `lymals --version`.
 
 Before announcing or publishing a release candidate, also verify that the version string, bundled `LICENSE.md`, and generated checksum files match the intended artifacts.
 
 ## Local release-equivalent build
 
 ```sh
-cargo build --release --bin lumals
+cargo build --release --bin lymals
 ```
 
 The resulting binary is under `target/release/`.

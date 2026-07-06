@@ -49,7 +49,7 @@ impl Diagnostic {
         Self {
             code: code.into(),
             severity,
-            source: "lumals".to_owned(),
+            source: "lymals".to_owned(),
             message: message.into(),
             primary_span: None,
             related_spans: Vec::new(),
@@ -192,7 +192,7 @@ fn validate_duplicate_keys(
                 DiagnosticSeverity::Warning,
                 format!("duplicate mapping key '{}'", entry.key),
             )
-            .with_source("lumals.validation");
+            .with_source("lymals.validation");
             diagnostic.primary_span = Some(entry.key_span);
             diagnostic.related_spans.push(RelatedDiagnosticSpan {
                 span: first_span,
@@ -306,7 +306,7 @@ fn validate_directive_line(source: &SourceText, line: &SourceLine<'_>) -> Option
     }
 
     match name {
-        "@luma" | "@profile" | "@schema" | "@use" | "@lua" | "@meta" => None,
+        "@lyma" | "@profile" | "@schema" | "@use" | "@lua" | "@meta" => None,
         "@import" | "@include" => {
             if value.is_empty() {
                 Some(validation_error(
@@ -461,7 +461,7 @@ fn validation_error(
     span: SourceSpan,
 ) -> Diagnostic {
     let mut diagnostic =
-        Diagnostic::new(code, DiagnosticSeverity::Error, message).with_source("lumals.validation");
+        Diagnostic::new(code, DiagnosticSeverity::Error, message).with_source("lymals.validation");
     diagnostic.primary_span = Some(span);
     diagnostic
 }

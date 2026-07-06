@@ -30,7 +30,7 @@ pub fn hover(request: HoverRequest<'_>) -> Option<HoverResult> {
     let diagnostics = diagnostics::collect(&parsed);
     let file = match &parsed.file {
         ParsedFile::Fallback(file) => file,
-        #[cfg(feature = "upstream-luma")]
+        #[cfg(feature = "upstream-lyma")]
         ParsedFile::Upstream(_) => return None,
     };
     let semantic = SemanticDocument::from_ast(&file.ast);
@@ -102,7 +102,7 @@ fn directive_hover(
         return Some(HoverResult {
             span: name_span,
             markdown: format!(
-                "**Directive:** `{}`\n\n{}\n\n```luma\n{}\n```\n\nSpec excerpt: {}\n\n**Static node type:** `directive`",
+                "**Directive:** `{}`\n\n{}\n\n```lyma\n{}\n```\n\nSpec excerpt: {}\n\n**Static node type:** `directive`",
                 spec.name, spec.summary, spec.example, spec.excerpt,
             ),
         });
@@ -457,19 +457,19 @@ fn directive_spec(name: &str) -> Option<DirectiveSpec> {
         "@import" => Some(DirectiveSpec {
             name: "@import",
             summary: "Import a local module and optionally bind it to an alias.",
-            example: "@import \"./shared.luma\" as shared",
+            example: "@import \"./shared.lyma\" as shared",
             excerpt: "Relative paths and `file:` URIs are allowed; non-`file:` schemes, absolute paths, and parent traversal are rejected by default in parse-only mode.",
         }),
         "@include" => Some(DirectiveSpec {
             name: "@include",
             summary: "Include a local document without evaluating Lua.",
-            example: "@include \"./partials/base.luma\"",
+            example: "@include \"./partials/base.lyma\"",
             excerpt: "Includes stay root-bounded and parse-only unless a future evaluation mode is explicitly enabled.",
         }),
         "@use" => Some(DirectiveSpec {
             name: "@use",
             summary: "Bind a local module path to a reusable alias.",
-            example: "@use \"./modules/network.luma\" as network",
+            example: "@use \"./modules/network.lyma\" as network",
             excerpt: "Module aliases are resolved from static import syntax; hover does not execute module code.",
         }),
         "@profile" => Some(DirectiveSpec {
@@ -478,10 +478,10 @@ fn directive_spec(name: &str) -> Option<DirectiveSpec> {
             example: "@profile dev",
             excerpt: "Profiles are treated as static identifiers in parse-only mode.",
         }),
-        "@luma" => Some(DirectiveSpec {
-            name: "@luma",
-            summary: "Declare the Luma language version used by the file.",
-            example: "@luma 1",
+        "@lyma" => Some(DirectiveSpec {
+            name: "@lyma",
+            summary: "Declare the Lyma language version used by the file.",
+            example: "@lyma 1",
             excerpt: "Version declarations are parsed statically and never trigger evaluation.",
         }),
         _ => None,

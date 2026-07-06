@@ -7,9 +7,9 @@ use crate::document::Document;
 use crate::position::LineIndex;
 use crate::tasks::VersionedDocumentGuard;
 
-use super::{LumaLanguageServer, diagnostics::collect_lsp_diagnostics};
+use super::{LymaLanguageServer, diagnostics::collect_lsp_diagnostics};
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_did_open(&self, params: DidOpenTextDocumentParams) {
         let text_document = params.text_document;
         let uri = text_document.uri;

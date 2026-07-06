@@ -6,12 +6,12 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::server;
+use lymals::server;
 
 #[tokio::test(flavor = "current_thread")]
 async fn references_include_declaration_for_local_lets_and_aliases() {
     let workspace = fixture_workspace_uri();
-    let document_uri = fixture_document_uri("workspace/main.luma");
+    let document_uri = fixture_document_uri("workspace/main.lyma");
     let (mut writer, mut reader, server_task) = start_server().await;
 
     let initialize = initialize(&mut writer, &mut reader, &workspace).await;
@@ -22,8 +22,8 @@ async fn references_include_declaration_for_local_lets_and_aliases() {
     initialized(&mut writer, &mut reader).await;
 
     let text = concat!(
-        "@import \"./shared.luma\" as shared\n",
-        "@use \"./modules/network.luma\" as network\n",
+        "@import \"./shared.lyma\" as shared\n",
+        "@use \"./modules/network.lyma\" as network\n",
         "let selected = ${shared.region}\n",
         "service_name: ${selected}\n",
         "network_ref: ${network}\n",
@@ -63,9 +63,9 @@ async fn references_include_declaration_for_local_lets_and_aliases() {
 #[tokio::test(flavor = "current_thread")]
 async fn references_find_multi_file_imports_schemas_tags_and_static_keys() {
     let workspace = fixture_workspace_uri();
-    let main_uri = fixture_document_uri("workspace/main.luma");
-    let schema_uri = fixture_document_uri("workspace/schema_refs.luma");
-    let shared_uri = fixture_document_uri("workspace/shared.luma");
+    let main_uri = fixture_document_uri("workspace/main.lyma");
+    let schema_uri = fixture_document_uri("workspace/schema_refs.lyma");
+    let shared_uri = fixture_document_uri("workspace/shared.lyma");
     let (mut writer, mut reader, server_task) = start_server().await;
     let init = initialize(&mut writer, &mut reader, &workspace).await;
     assert!(
@@ -79,8 +79,8 @@ async fn references_find_multi_file_imports_schemas_tags_and_static_keys() {
         &mut reader,
         &main_uri,
         concat!(
-            "@import \"./shared.luma\" as shared\n",
-            "@import \"./service.luma\" as service\n",
+            "@import \"./shared.lyma\" as shared\n",
+            "@import \"./service.lyma\" as service\n",
             "region_name: ${shared.region}\n",
             "replicas: ${service.replicas}\n"
         ),
@@ -95,7 +95,7 @@ async fn references_find_multi_file_imports_schemas_tags_and_static_keys() {
             "@schema Widget\n",
             "component: @Widget\n",
             "tagged: !Widget \"x\"\n",
-            "@import \"./shared.luma\" as shared\n"
+            "@import \"./shared.lyma\" as shared\n"
         ),
     )
     .await;
@@ -197,7 +197,7 @@ async fn open_doc(
             "jsonrpc": "2.0",
             "method": "textDocument/didOpen",
             "params": {
-                "textDocument": {"uri": uri, "languageId": "luma", "version": 1, "text": text}
+                "textDocument": {"uri": uri, "languageId": "lyma", "version": 1, "text": text}
             }
         }),
     )

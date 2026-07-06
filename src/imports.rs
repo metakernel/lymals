@@ -8,11 +8,11 @@ use thiserror::Error;
 use tower_lsp::lsp_types::Url;
 
 use crate::workspace::{
-    effective_roots, file_url_to_path, normalize_path, validate_workspace_luma_file_uri,
+    effective_roots, file_url_to_path, normalize_path, validate_workspace_lyma_file_uri,
 };
 use crate::{
     ast::{AstFile, Directive, DocumentItem},
-    config::LumalsConfig,
+    config::LymalsConfig,
     diagnostics::{Diagnostic, DiagnosticSeverity},
     parser,
     syntax::{FileId, ParsedFile, SourceSpan, SourceText},
@@ -71,7 +71,7 @@ pub fn resolve_guarded_import(
     base_uri: &Url,
     target: &str,
     workspace_folders: &[tower_lsp::lsp_types::WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Result<Url, ImportPolicyError> {
     let target = strip_matching_quotes(target.trim()).unwrap_or(target.trim());
 
@@ -122,7 +122,7 @@ pub fn resolve_import_graph(
     root_uri: &Url,
     root_text: &str,
     workspace_folders: &[tower_lsp::lsp_types::WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> ImportGraph {
     let mut graph = ImportGraph {
         roots: vec![root_uri.clone()],
@@ -216,12 +216,12 @@ pub fn collect_resolution_diagnostics(
     text: &str,
     file_id: FileId,
     workspace_folders: &[tower_lsp::lsp_types::WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Vec<Diagnostic> {
     let parsed = parser::parse_fallback(file_id, uri.as_str(), text);
     let file = match &parsed.file {
         ParsedFile::Fallback(file) => &file.ast,
-        #[cfg(feature = "upstream-luma")]
+        #[cfg(feature = "upstream-lyma")]
         ParsedFile::Upstream(_) => return Vec::new(),
     };
     let mut diagnostics = Vec::new();
@@ -253,14 +253,14 @@ fn ingest_document_edges(
     depth: u32,
     stack: Vec<PathBuf>,
     workspace_folders: &[tower_lsp::lsp_types::WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
     graph: &mut ImportGraph,
     queue: &mut VecDeque<PendingFile>,
 ) {
     let parsed = parser::parse_fallback(file_id, uri.as_str(), text);
     let file = match &parsed.file {
         ParsedFile::Fallback(file) => &file.ast,
-        #[cfg(feature = "upstream-luma")]
+        #[cfg(feature = "upstream-lyma")]
         ParsedFile::Upstream(_) => return,
     };
 
@@ -331,7 +331,7 @@ fn ingest_document_edges(
 fn ensure_file_uri_within_roots(
     uri: Url,
     workspace_folders: &[tower_lsp::lsp_types::WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Result<Url, ImportPolicyError> {
     let path = file_url_to_path(&uri).ok_or(ImportPolicyError::InvalidTarget)?;
     ensure_path_within_roots(path, uri, workspace_folders, config)
@@ -341,7 +341,7 @@ fn ensure_path_within_roots(
     path: PathBuf,
     uri: Url,
     workspace_folders: &[tower_lsp::lsp_types::WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Result<Url, ImportPolicyError> {
     let candidate_path = fs::canonicalize(&path)
         .ok()
@@ -357,14 +357,14 @@ fn ensure_path_within_roots(
 fn validate_resolved_file(
     uri: &Url,
     workspace_folders: &[tower_lsp::lsp_types::WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Result<(), ImportPolicyError> {
     if uri.scheme() != "file" {
         return Err(ImportPolicyError::DisallowedScheme(
             uri.scheme().to_string(),
         ));
     }
-    let validated = validate_workspace_luma_file_uri(uri, workspace_folders, config)
+    let validated = validate_workspace_lyma_file_uri(uri, workspace_folders, config)
         .map_err(map_workspace_file_policy_error)?;
     let metadata =
         fs::metadata(&validated.canonical_path).map_err(|_| ImportPolicyError::MissingTarget)?;
@@ -383,7 +383,7 @@ fn canonical_existing_path(uri: &Url) -> Option<PathBuf> {
 fn is_within_configured_roots(
     path: &Path,
     workspace_folders: &[tower_lsp::lsp_types::WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> bool {
     let mut roots = effective_roots(workspace_folders, config);
     let canonical_roots = roots
@@ -396,22 +396,22 @@ fn is_within_configured_roots(
 }
 
 fn map_workspace_file_policy_error(
-    error: crate::workspace::WorkspaceLumaFilePolicyError,
+    error: crate::workspace::WorkspaceLymaFilePolicyError,
 ) -> ImportPolicyError {
     match error {
-        crate::workspace::WorkspaceLumaFilePolicyError::WorkspaceIndexingDisabled
-        | crate::workspace::WorkspaceLumaFilePolicyError::OutsideAllowedRoots => {
+        crate::workspace::WorkspaceLymaFilePolicyError::WorkspaceIndexingDisabled
+        | crate::workspace::WorkspaceLymaFilePolicyError::OutsideAllowedRoots => {
             ImportPolicyError::OutsideAllowedRoots
         }
-        crate::workspace::WorkspaceLumaFilePolicyError::NonFileUri => {
+        crate::workspace::WorkspaceLymaFilePolicyError::NonFileUri => {
             ImportPolicyError::InvalidTarget
         }
-        crate::workspace::WorkspaceLumaFilePolicyError::NotLuma
-        | crate::workspace::WorkspaceLumaFilePolicyError::MissingFile
-        | crate::workspace::WorkspaceLumaFilePolicyError::NotRegularFile => {
+        crate::workspace::WorkspaceLymaFilePolicyError::NotLyma
+        | crate::workspace::WorkspaceLymaFilePolicyError::MissingFile
+        | crate::workspace::WorkspaceLymaFilePolicyError::NotRegularFile => {
             ImportPolicyError::MissingTarget
         }
-        crate::workspace::WorkspaceLumaFilePolicyError::ExcludedByGlob => {
+        crate::workspace::WorkspaceLymaFilePolicyError::ExcludedByGlob => {
             ImportPolicyError::OutsideAllowedRoots
         }
     }
@@ -498,7 +498,7 @@ fn directive_target_span(directive: &Directive, source: &SourceText) -> Option<S
 
 fn policy_diagnostic(code: &str, error: ImportPolicyError, span: Option<SourceSpan>) -> Diagnostic {
     let mut diagnostic = Diagnostic::new(code, DiagnosticSeverity::Error, error.to_string())
-        .with_source("lumals.imports");
+        .with_source("lymals.imports");
     diagnostic.primary_span = span;
     diagnostic
 }
@@ -533,18 +533,18 @@ mod tests {
     use tower_lsp::lsp_types::{Url, WorkspaceFolder};
 
     use super::{ImportPolicyError, path_key_is_under_root, resolve_guarded_import};
-    use crate::config::LumalsConfig;
+    use crate::config::LymalsConfig;
 
     #[test]
     fn blocks_parent_traversal_in_relative_imports() {
         let err = resolve_guarded_import(
-            &Url::parse("file:///workspace/pkg/main.luma").unwrap(),
-            "../escape.luma",
+            &Url::parse("file:///workspace/pkg/main.lyma").unwrap(),
+            "../escape.lyma",
             &[WorkspaceFolder {
                 uri: Url::parse("file:///workspace").unwrap(),
                 name: "workspace".to_string(),
             }],
-            &LumalsConfig::default(),
+            &LymalsConfig::default(),
         )
         .unwrap_err();
 
@@ -554,13 +554,13 @@ mod tests {
     #[test]
     fn blocks_non_file_schemes_by_default() {
         let err = resolve_guarded_import(
-            &Url::parse("file:///workspace/pkg/main.luma").unwrap(),
-            "https://example.com/remote.luma",
+            &Url::parse("file:///workspace/pkg/main.lyma").unwrap(),
+            "https://example.com/remote.lyma",
             &[WorkspaceFolder {
                 uri: Url::parse("file:///workspace").unwrap(),
                 name: "workspace".to_string(),
             }],
-            &LumalsConfig::default(),
+            &LymalsConfig::default(),
         )
         .unwrap_err();
 
@@ -573,8 +573,8 @@ mod tests {
     #[test]
     fn fails_closed_when_no_roots_are_configured() {
         let temp = tempfile::tempdir().unwrap();
-        let base_uri = Url::from_file_path(temp.path().join("pkg/main.luma")).unwrap();
-        let err = resolve_guarded_import(&base_uri, "dep.luma", &[], &LumalsConfig::default())
+        let base_uri = Url::from_file_path(temp.path().join("pkg/main.lyma")).unwrap();
+        let err = resolve_guarded_import(&base_uri, "dep.lyma", &[], &LymalsConfig::default())
             .unwrap_err();
 
         assert_eq!(err, ImportPolicyError::OutsideAllowedRoots);
@@ -583,12 +583,12 @@ mod tests {
     #[test]
     fn root_prefix_matching_requires_path_boundary() {
         assert!(path_key_is_under_root(
-            "c:/workspace/pkg/main.luma",
+            "c:/workspace/pkg/main.lyma",
             "c:/workspace"
         ));
         assert!(path_key_is_under_root("c:/workspace", "c:/workspace"));
         assert!(!path_key_is_under_root(
-            "c:/workspace-evil/main.luma",
+            "c:/workspace-evil/main.lyma",
             "c:/workspace"
         ));
     }

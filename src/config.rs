@@ -2,12 +2,12 @@ use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-pub const CONFIG_SECTION: &str = "lumals";
-pub const CONFIG_SCHEMA_ID: &str = "https://lumals.dev/schemas/lumals.json";
+pub const CONFIG_SECTION: &str = "lymals";
+pub const CONFIG_SCHEMA_ID: &str = "https://lymals.dev/schemas/lymals.json";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
-pub struct LumalsConfig {
+pub struct LymalsConfig {
     #[serde(default)]
     pub diagnostics: DiagnosticsSettings,
     #[serde(default)]
@@ -58,7 +58,7 @@ pub struct LumalsConfig {
     pub max_indexed_file_bytes: u32,
 }
 
-impl Default for LumalsConfig {
+impl Default for LymalsConfig {
     fn default() -> Self {
         Self {
             diagnostics: DiagnosticsSettings::default(),
@@ -84,7 +84,7 @@ impl Default for LumalsConfig {
     }
 }
 
-impl LumalsConfig {
+impl LymalsConfig {
     pub fn from_lsp_value(value: &Value) -> serde_json::Result<Self> {
         match value {
             Value::Null => Ok(Self::default()),
@@ -102,7 +102,7 @@ impl LumalsConfig {
 
 pub fn config_schema() -> Value {
     let mut value =
-        serde_json::to_value(schema_for!(LumalsConfig)).expect("schema should serialize");
+        serde_json::to_value(schema_for!(LymalsConfig)).expect("schema should serialize");
 
     let object = value
         .as_object_mut()
@@ -113,7 +113,7 @@ pub fn config_schema() -> Value {
     );
     object.insert(
         "title".to_string(),
-        Value::String("lumals config".to_string()),
+        Value::String("lymals config".to_string()),
     );
     value
 }
@@ -284,11 +284,11 @@ fn default_max_indexed_file_bytes() -> u32 {
 mod tests {
     use serde_json::json;
 
-    use super::{CONFIG_SCHEMA_ID, CONFIG_SECTION, LumalsConfig, config_schema};
+    use super::{CONFIG_SCHEMA_ID, CONFIG_SECTION, LymalsConfig, config_schema};
 
     #[test]
     fn defaults_match_parse_only_policy() {
-        let config = LumalsConfig::default();
+        let config = LymalsConfig::default();
 
         assert!(config.diagnostics.enabled);
         assert!(config.formatting.enabled);
@@ -308,7 +308,7 @@ mod tests {
 
     #[test]
     fn parses_direct_and_wrapped_configuration_values() {
-        let direct = LumalsConfig::from_lsp_value(&json!({
+        let direct = LymalsConfig::from_lsp_value(&json!({
             "evaluation": { "enabled": true },
             "allowedSchemes": ["file", "untitled"]
         }))
@@ -316,7 +316,7 @@ mod tests {
         assert!(direct.evaluation.enabled);
         assert_eq!(direct.allowed_schemes, ["file", "untitled"]);
 
-        let wrapped = LumalsConfig::from_lsp_value(&json!({
+        let wrapped = LymalsConfig::from_lsp_value(&json!({
             CONFIG_SECTION: {
                 "logLevel": "debug",
                 "indexWorkspace": false

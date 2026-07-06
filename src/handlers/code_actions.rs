@@ -3,9 +3,9 @@ use tower_lsp::lsp_types::{CodeActionParams, CodeActionResponse};
 
 use crate::code_actions::{self, CodeActionRequest};
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_code_action(
         &self,
         params: CodeActionParams,

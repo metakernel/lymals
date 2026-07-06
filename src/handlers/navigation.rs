@@ -9,9 +9,9 @@ use tower_lsp::lsp_types::{
 
 use crate::navigation::{self, NavigationRequest};
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_goto_definition(
         &self,
         params: GotoDefinitionParams,

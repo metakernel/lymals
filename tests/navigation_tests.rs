@@ -6,12 +6,12 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::server;
+use lymals::server;
 
 #[tokio::test(flavor = "current_thread")]
 async fn definition_and_declaration_navigate_local_and_workspace_symbols() {
     let workspace = fixture_workspace_uri();
-    let document_uri = fixture_document_uri("workspace/main.luma");
+    let document_uri = fixture_document_uri("workspace/main.lyma");
 
     let (client_to_server, server_stdin) = tokio::io::duplex(16 * 1024);
     let (server_stdout, server_to_client) = tokio::io::duplex(16 * 1024);
@@ -73,10 +73,10 @@ async fn definition_and_declaration_navigate_local_and_workspace_symbols() {
     let _initialized_log = read_message(&mut reader).await;
 
     let text = concat!(
-        "@import \"./shared.luma\" as shared\n",
-        "@import \"./service.luma\" as service\n",
-        "@include \"./partials/base.luma\"\n",
-        "@use \"./modules/network.luma\" as network\n",
+        "@import \"./shared.lyma\" as shared\n",
+        "@import \"./service.lyma\" as service\n",
+        "@include \"./partials/base.lyma\"\n",
+        "@use \"./modules/network.lyma\" as network\n",
         "let selected = ${shared.region}\n",
         "service_name: ${selected}\n",
         "replica_count: ${service.replicas}\n",
@@ -92,7 +92,7 @@ async fn definition_and_declaration_navigate_local_and_workspace_symbols() {
             "params": {
                 "textDocument": {
                     "uri": document_uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": text
                 }
@@ -136,7 +136,7 @@ async fn definition_and_declaration_navigate_local_and_workspace_symbols() {
     assert_eq!(
         extract_locations(&workspace_def),
         vec![json!({
-            "uri": fixture_document_uri("workspace/service.luma"),
+            "uri": fixture_document_uri("workspace/service.lyma"),
             "range": {
                 "start": { "line": 0, "character": 0 },
                 "end": { "line": 0, "character": 8 }
@@ -178,7 +178,7 @@ async fn definition_and_declaration_navigate_local_and_workspace_symbols() {
     assert_eq!(
         extract_locations(&path_def),
         vec![json!({
-            "uri": fixture_document_uri("workspace/partials/base.luma"),
+            "uri": fixture_document_uri("workspace/partials/base.lyma"),
             "range": {
                 "start": { "line": 0, "character": 0 },
                 "end": { "line": 0, "character": 11 }
@@ -192,7 +192,7 @@ async fn definition_and_declaration_navigate_local_and_workspace_symbols() {
 #[tokio::test(flavor = "current_thread")]
 async fn type_definition_and_implementation_follow_static_navigation_semantics() {
     let workspace = fixture_workspace_uri();
-    let document_uri = fixture_document_uri("workspace/main.luma");
+    let document_uri = fixture_document_uri("workspace/main.lyma");
 
     let (client_to_server, server_stdin) = tokio::io::duplex(16 * 1024);
     let (server_stdout, server_to_client) = tokio::io::duplex(16 * 1024);
@@ -248,8 +248,8 @@ async fn type_definition_and_implementation_follow_static_navigation_semantics()
     let text = concat!(
         "@profile dev\n",
         "@schema Widget\n",
-        "@import \"./service.luma\" as service\n",
-        "@use \"./modules/network.luma\" as network\n",
+        "@import \"./service.lyma\" as service\n",
+        "@use \"./modules/network.lyma\" as network\n",
         "component: @Widget\n",
         "profile_name: @dev\n",
         "tagged: !Widget \"card\"\n",
@@ -266,7 +266,7 @@ async fn type_definition_and_implementation_follow_static_navigation_semantics()
             "params": {
                 "textDocument": {
                     "uri": document_uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": text
                 }
@@ -346,7 +346,7 @@ async fn type_definition_and_implementation_follow_static_navigation_semantics()
     assert_eq!(
         extract_locations(&implementation),
         vec![json!({
-            "uri": fixture_document_uri("workspace/service.luma"),
+            "uri": fixture_document_uri("workspace/service.lyma"),
             "range": {
                 "start": { "line": 0, "character": 0 },
                 "end": { "line": 0, "character": 8 }

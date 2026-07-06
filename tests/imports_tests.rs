@@ -3,8 +3,8 @@ use std::fs;
 use tempfile::tempdir;
 use tower_lsp::lsp_types::{Url, WorkspaceFolder};
 
-use lumals::{
-    config::LumalsConfig,
+use lymals::{
+    config::LymalsConfig,
     imports::{
         ImportPolicyError, collect_resolution_diagnostics, resolve_guarded_import,
         resolve_import_graph,
@@ -18,40 +18,40 @@ fn resolves_local_import_graph_and_refreshes_from_disk() {
     let root = workspace.path();
     fs::create_dir_all(root.join("shared")).unwrap();
     fs::write(
-        root.join("main.luma"),
-        "@import \"./shared/a.luma\" as a\nroot: true\n",
+        root.join("main.lyma"),
+        "@import \"./shared/a.lyma\" as a\nroot: true\n",
     )
     .unwrap();
-    fs::write(root.join("shared/a.luma"), "name: one\n").unwrap();
+    fs::write(root.join("shared/a.lyma"), "name: one\n").unwrap();
 
     let folders = folders(root);
-    let main_uri = file_uri(root.join("main.luma"));
-    let main_text = fs::read_to_string(root.join("main.luma")).unwrap();
+    let main_uri = file_uri(root.join("main.lyma"));
+    let main_text = fs::read_to_string(root.join("main.lyma")).unwrap();
 
-    let first = resolve_import_graph(&main_uri, &main_text, &folders, &LumalsConfig::default());
+    let first = resolve_import_graph(&main_uri, &main_text, &folders, &LymalsConfig::default());
     assert_eq!(first.diagnostics, Vec::new());
     assert_eq!(first.edges.len(), 1);
     assert!(
         first
             .files
             .iter()
-            .any(|uri| uri.as_str().ends_with("shared/a.luma"))
+            .any(|uri| uri.as_str().ends_with("shared/a.lyma"))
     );
 
     fs::write(
-        root.join("shared/a.luma"),
-        "@include \"./b.luma\"\nname: one\n",
+        root.join("shared/a.lyma"),
+        "@include \"./b.lyma\"\nname: one\n",
     )
     .unwrap();
-    fs::write(root.join("shared/b.luma"), "name: two\n").unwrap();
-    let refreshed = resolve_import_graph(&main_uri, &main_text, &folders, &LumalsConfig::default());
+    fs::write(root.join("shared/b.lyma"), "name: two\n").unwrap();
+    let refreshed = resolve_import_graph(&main_uri, &main_text, &folders, &LymalsConfig::default());
     assert_eq!(refreshed.diagnostics, Vec::new());
     assert_eq!(refreshed.edges.len(), 2);
     assert!(
         refreshed
             .files
             .iter()
-            .any(|uri| uri.as_str().ends_with("shared/b.luma"))
+            .any(|uri| uri.as_str().ends_with("shared/b.lyma"))
     );
 }
 
@@ -59,51 +59,51 @@ fn resolves_local_import_graph_and_refreshes_from_disk() {
 fn reports_missing_files_cycles_depth_and_edge_limits() {
     let workspace = tempdir().unwrap();
     let root = workspace.path();
-    fs::write(root.join("main.luma"), "@import \"./missing.luma\"\n").unwrap();
+    fs::write(root.join("main.lyma"), "@import \"./missing.lyma\"\n").unwrap();
     let folders = folders(root);
-    let main_uri = file_uri(root.join("main.luma"));
-    let main_text = fs::read_to_string(root.join("main.luma")).unwrap();
+    let main_uri = file_uri(root.join("main.lyma"));
+    let main_text = fs::read_to_string(root.join("main.lyma")).unwrap();
 
-    let missing = resolve_import_graph(&main_uri, &main_text, &folders, &LumalsConfig::default());
+    let missing = resolve_import_graph(&main_uri, &main_text, &folders, &LymalsConfig::default());
     assert!(
         missing.diagnostics.iter().any(|diag| diag.code == "L019"),
         "{:?}",
         missing.diagnostics
     );
 
-    fs::write(root.join("main.luma"), "@import \"./a.luma\"\n").unwrap();
-    fs::write(root.join("a.luma"), "@include \"./main.luma\"\n").unwrap();
-    let main_text = fs::read_to_string(root.join("main.luma")).unwrap();
-    let cycle = resolve_import_graph(&main_uri, &main_text, &folders, &LumalsConfig::default());
+    fs::write(root.join("main.lyma"), "@import \"./a.lyma\"\n").unwrap();
+    fs::write(root.join("a.lyma"), "@include \"./main.lyma\"\n").unwrap();
+    let main_text = fs::read_to_string(root.join("main.lyma")).unwrap();
+    let cycle = resolve_import_graph(&main_uri, &main_text, &folders, &LymalsConfig::default());
     assert!(cycle.diagnostics.iter().any(|diag| diag.code == "L021"));
 
-    fs::write(root.join("main.luma"), "@import \"./a.luma\"\n").unwrap();
-    fs::write(root.join("a.luma"), "@include \"./b.luma\"\n").unwrap();
-    fs::write(root.join("b.luma"), "name: b\n").unwrap();
-    let limited = LumalsConfig {
+    fs::write(root.join("main.lyma"), "@import \"./a.lyma\"\n").unwrap();
+    fs::write(root.join("a.lyma"), "@include \"./b.lyma\"\n").unwrap();
+    fs::write(root.join("b.lyma"), "name: b\n").unwrap();
+    let limited = LymalsConfig {
         max_resolve_depth: 1,
-        ..LumalsConfig::default()
+        ..LymalsConfig::default()
     };
-    let main_text = fs::read_to_string(root.join("main.luma")).unwrap();
+    let main_text = fs::read_to_string(root.join("main.lyma")).unwrap();
     let depth = resolve_import_graph(&main_uri, &main_text, &folders, &limited);
     assert!(depth.diagnostics.iter().any(|diag| diag.code == "L023"));
 
-    let edge_limited = LumalsConfig {
+    let edge_limited = LymalsConfig {
         max_resolved_edges_per_file: 1,
-        ..LumalsConfig::default()
+        ..LymalsConfig::default()
     };
     let edges = resolve_import_graph(&main_uri, &main_text, &folders, &edge_limited);
     assert!(edges.diagnostics.iter().any(|diag| diag.code == "L024"));
 
-    fs::write(root.join("big.luma"), "x".repeat(32)).unwrap();
-    fs::write(root.join("main.luma"), "@import \"./big.luma\"\n").unwrap();
+    fs::write(root.join("big.lyma"), "x".repeat(32)).unwrap();
+    fs::write(root.join("main.lyma"), "@import \"./big.lyma\"\n").unwrap();
     let oversized = resolve_import_graph(
         &main_uri,
-        &fs::read_to_string(root.join("main.luma")).unwrap(),
+        &fs::read_to_string(root.join("main.lyma")).unwrap(),
         &folders,
-        &LumalsConfig {
+        &LymalsConfig {
             max_indexed_file_bytes: 8,
-            ..LumalsConfig::default()
+            ..LymalsConfig::default()
         },
     );
     assert!(
@@ -117,16 +117,16 @@ fn reports_missing_files_cycles_depth_and_edge_limits() {
 fn blocks_traversal_outside_roots_and_unsafe_schemes() {
     let workspace = tempdir().unwrap();
     let root = workspace.path();
-    fs::write(root.join("main.luma"), "root: true\n").unwrap();
+    fs::write(root.join("main.lyma"), "root: true\n").unwrap();
     let folders = folders(root);
-    let main_uri = file_uri(root.join("main.luma"));
+    let main_uri = file_uri(root.join("main.lyma"));
 
     assert_eq!(
         resolve_guarded_import(
             &main_uri,
-            "../escape.luma",
+            "../escape.lyma",
             &folders,
-            &LumalsConfig::default()
+            &LymalsConfig::default()
         )
         .unwrap_err(),
         ImportPolicyError::ParentTraversal
@@ -134,9 +134,9 @@ fn blocks_traversal_outside_roots_and_unsafe_schemes() {
     assert_eq!(
         resolve_guarded_import(
             &main_uri,
-            "https://example.test/pkg.luma",
+            "https://example.test/pkg.lyma",
             &folders,
-            &LumalsConfig::default()
+            &LymalsConfig::default()
         )
         .unwrap_err(),
         ImportPolicyError::DisallowedScheme("https".to_string())
@@ -146,21 +146,21 @@ fn blocks_traversal_outside_roots_and_unsafe_schemes() {
             &main_uri,
             "pkg://registry/module",
             &folders,
-            &LumalsConfig::default()
+            &LymalsConfig::default()
         )
         .unwrap_err(),
         ImportPolicyError::DisallowedScheme("pkg".to_string())
     );
 
     let outside = tempdir().unwrap();
-    let outside_file = outside.path().join("outside.luma");
+    let outside_file = outside.path().join("outside.lyma");
     fs::write(&outside_file, "outside: true\n").unwrap();
     let outside_uri = file_uri(outside_file);
     let err = resolve_guarded_import(
         &main_uri,
         outside_uri.as_str(),
         &folders,
-        &LumalsConfig::default(),
+        &LymalsConfig::default(),
     )
     .unwrap_err();
     assert_eq!(err, ImportPolicyError::OutsideAllowedRoots);
@@ -170,15 +170,15 @@ fn blocks_traversal_outside_roots_and_unsafe_schemes() {
 fn import_resolution_diagnostics_include_missing_targets() {
     let workspace = tempdir().unwrap();
     let root = workspace.path();
-    let text = "@include \"./absent.luma\"\nroot: true\n";
-    fs::write(root.join("main.luma"), text).unwrap();
+    let text = "@include \"./absent.lyma\"\nroot: true\n";
+    fs::write(root.join("main.lyma"), text).unwrap();
 
     let diagnostics = collect_resolution_diagnostics(
-        &file_uri(root.join("main.luma")),
+        &file_uri(root.join("main.lyma")),
         text,
         FileId(0),
         &folders(root),
-        &LumalsConfig::default(),
+        &LymalsConfig::default(),
     );
 
     assert!(
@@ -194,22 +194,22 @@ fn import_resolution_rejects_symlink_escape_when_supported() {
     let workspace = tempdir().unwrap();
     let outside = tempdir().unwrap();
     let root = workspace.path();
-    fs::write(root.join("main.luma"), "@include \"./linked.luma\"\n").unwrap();
+    fs::write(root.join("main.lyma"), "@include \"./linked.lyma\"\n").unwrap();
 
-    let outside_path = outside.path().join("escape.luma");
+    let outside_path = outside.path().join("escape.lyma");
     fs::write(&outside_path, "escape: true\n").unwrap();
 
-    let link_path = root.join("linked.luma");
+    let link_path = root.join("linked.lyma");
     if try_create_file_symlink(&outside_path, &link_path).is_err() {
         return;
     }
 
     let diagnostics = collect_resolution_diagnostics(
-        &file_uri(root.join("main.luma")),
-        &fs::read_to_string(root.join("main.luma")).unwrap(),
+        &file_uri(root.join("main.lyma")),
+        &fs::read_to_string(root.join("main.lyma")).unwrap(),
         FileId(0),
         &folders(root),
-        &LumalsConfig::default(),
+        &LymalsConfig::default(),
     );
 
     assert!(

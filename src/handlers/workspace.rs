@@ -4,11 +4,11 @@ use tower_lsp::lsp_types::{
     RelativePattern, WatchKind, WorkspaceFolder,
 };
 
-use crate::workspace::{LUMA_GLOB, WATCH_REGISTRATION_ID};
+use crate::workspace::{LYMA_GLOB, WATCH_REGISTRATION_ID};
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_did_change_workspace_folders(
         &self,
         params: DidChangeWorkspaceFoldersParams,
@@ -30,7 +30,7 @@ impl LumaLanguageServer {
         }
     }
 
-    pub(super) async fn register_luma_file_watchers(&self) {
+    pub(super) async fn register_lyma_file_watchers(&self) {
         let Some(registration) = self.file_watch_registration() else {
             return;
         };
@@ -44,7 +44,7 @@ impl LumaLanguageServer {
         } else {
             self.trace(
                 "workspace watcher registration succeeded",
-                Some(format!("glob={LUMA_GLOB}")),
+                Some(format!("glob={LYMA_GLOB}")),
             )
             .await;
         }
@@ -70,7 +70,7 @@ impl LumaLanguageServer {
                 .collect()
         } else {
             vec![FileSystemWatcher {
-                glob_pattern: GlobPattern::String(LUMA_GLOB.to_string()),
+                glob_pattern: GlobPattern::String(LYMA_GLOB.to_string()),
                 kind: Some(WatchKind::Create | WatchKind::Change | WatchKind::Delete),
             }]
         };
@@ -89,7 +89,7 @@ fn relative_file_system_watcher(folder: WorkspaceFolder) -> FileSystemWatcher {
     FileSystemWatcher {
         glob_pattern: GlobPattern::Relative(RelativePattern {
             base_uri: OneOf::Left(folder),
-            pattern: LUMA_GLOB.to_string(),
+            pattern: LYMA_GLOB.to_string(),
         }),
         kind: Some(WatchKind::Create | WatchKind::Change | WatchKind::Delete),
     }

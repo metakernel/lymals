@@ -1,39 +1,39 @@
 # VS Code-compatible clients
 
-`lumals` v1 does not ship a VSIX. Use any VS Code-compatible extension that can launch a custom stdio language server, or a local development extension, and point it at the downloaded `lumals` binary.
+`lymals` v1 does not ship a VSIX. Use any VS Code-compatible extension that can launch a custom stdio language server, or a local development extension, and point it at the downloaded `lymals` binary.
 
 ## What to configure
 
-- command: absolute path to `lumals`/`lumals.exe`
+- command: absolute path to `lymals`/`lymals.exe`
 - args: `--stdio`
-- language id / file association: map `*.luma` to `luma`
-- workspace settings section: `lumals`
+- language id / file association: map `*.lyma` to `lyma`
+- workspace settings section: `lymals`
 
-Keep logs off stdout; `lumals` reserves stdout for JSON-RPC and writes logs to stderr or `--log-file`.
+Keep logs off stdout; `lymals` reserves stdout for JSON-RPC and writes logs to stderr or `--log-file`.
 
 ## Example generic client settings
 
-Client launch settings are extension-specific and are **not** part of the server's `lumals` workspace configuration. Use whatever keys your chosen VS Code-compatible client expects for command/args, for example:
+Client launch settings are extension-specific and are **not** part of the server's `lymals` workspace configuration. Use whatever keys your chosen VS Code-compatible client expects for command/args, for example:
 
 ```json
 {
-  "<client-specific server path setting>": "/absolute/path/to/lumals",
+  "<client-specific server path setting>": "/absolute/path/to/lymals",
   "<client-specific server args setting>": ["--stdio"],
   "files.associations": {
-    "*.luma": "luma"
+    "*.lyma": "lyma"
   }
 }
 ```
 
-If you need a concrete example, keep client-only launch settings under an extension namespace such as `lumalsExtension.server.path` / `lumalsExtension.server.args`, not under `lumals`.
+If you need a concrete example, keep client-only launch settings under an extension namespace such as `lymalsExtension.server.path` / `lymalsExtension.server.args`, not under `lymals`.
 
-On Windows, use an escaped absolute path such as `"C:\\Tools\\lumals\\lumals.exe"`.
+On Windows, use an escaped absolute path such as `"C:\\Tools\\lymals\\lymals.exe"`.
 
-If your client supports passing workspace settings to the server, use the normal `lumals` config section documented in `docs/configuration.md` only for actual server settings, for example:
+If your client supports passing workspace settings to the server, use the normal `lymals` config section documented in `docs/configuration.md` only for actual server settings, for example:
 
 ```json
 {
-  "lumals": {
+  "lymals": {
     "evaluation": { "enabled": false },
     "allowedSchemes": ["file"]
   }

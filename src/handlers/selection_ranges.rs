@@ -3,9 +3,9 @@ use tower_lsp::lsp_types::{SelectionRange, SelectionRangeParams};
 
 use crate::selection_ranges::{self, SelectionRangesRequest};
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_selection_ranges(
         &self,
         params: SelectionRangeParams,

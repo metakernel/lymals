@@ -1,11 +1,11 @@
 use tower_lsp::lsp_types::{Position, Range, Url};
 
-use lumals::document::{Document, DocumentStore, DocumentStoreError};
-use lumals::position::PositionError;
-use lumals::syntax::{FileId, SourceSpan};
+use lymals::document::{Document, DocumentStore, DocumentStoreError};
+use lymals::position::PositionError;
+use lymals::syntax::{FileId, SourceSpan};
 
 fn document(text: &str) -> Document {
-    Document::new(Url::parse("file:///test.luma").unwrap(), 1, text, FileId(7))
+    Document::new(Url::parse("file:///test.lyma").unwrap(), 1, text, FileId(7))
 }
 
 #[test]
@@ -107,7 +107,7 @@ fn invalid_ranges_and_offsets_fail_safely() {
 
 #[test]
 fn document_store_tracks_version_dirty_and_parse_cache() {
-    let uri = Url::parse("file:///store.luma").unwrap();
+    let uri = Url::parse("file:///store.lyma").unwrap();
     let mut store = DocumentStore::new();
     let file_id = store.open(uri.clone(), 1, "key: value");
 
@@ -129,7 +129,7 @@ fn document_store_tracks_version_dirty_and_parse_cache() {
     assert!(doc.parse_cache().is_none());
 
     assert!(matches!(
-        store.update(&Url::parse("file:///missing.luma").unwrap(), 1, ""),
+        store.update(&Url::parse("file:///missing.lyma").unwrap(), 1, ""),
         Err(DocumentStoreError::NotFound(_))
     ));
 }

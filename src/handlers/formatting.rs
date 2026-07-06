@@ -8,9 +8,9 @@ use crate::{
     syntax::{SourceSpan, TextEdit},
 };
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_document_formatting(
         &self,
         params: DocumentFormattingParams,

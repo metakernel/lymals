@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use lumals::{diagnostics, formatting, parser, syntax::FileId};
+use lymals::{diagnostics, formatting, parser, syntax::FileId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ConformanceStatus {
@@ -13,14 +13,14 @@ enum ConformanceStatus {
 fn parser_and_formatter_conformance_fixtures_are_documented() {
     let fixture_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/conformance");
     let cases = [
-        ("valid_core.luma", ConformanceStatus::Pass),
-        ("valid_multidoc.luma", ConformanceStatus::Pass),
+        ("valid_core.lyma", ConformanceStatus::Pass),
+        ("valid_multidoc.lyma", ConformanceStatus::Pass),
         (
-            "invalid_policy.luma",
+            "invalid_policy.lyma",
             ConformanceStatus::ExpectedDiagnostics,
         ),
         (
-            "unsupported_eval.luma",
+            "unsupported_eval.lyma",
             ConformanceStatus::UnsupportedParseOnly,
         ),
     ];
@@ -69,10 +69,10 @@ fn parser_and_formatter_conformance_fixtures_are_documented() {
     assert_eq!(
         report,
         vec![
-            "valid_core.luma: pass (1 documents)",
-            "valid_multidoc.luma: pass (2 documents)",
-            "invalid_policy.luma: expected diagnostics (5)",
-            "unsupported_eval.luma: unsupported in v1 parse-only mode (evaluation not executed)",
+            "valid_core.lyma: pass (1 documents)",
+            "valid_multidoc.lyma: pass (2 documents)",
+            "invalid_policy.lyma: expected diagnostics (5)",
+            "unsupported_eval.lyma: unsupported in v1 parse-only mode (evaluation not executed)",
         ]
     );
 }

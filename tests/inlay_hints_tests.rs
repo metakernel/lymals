@@ -5,7 +5,7 @@ use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 use tower_lsp::lsp_types::Url;
 
-use lumals::server;
+use lymals::server;
 
 #[tokio::test(flavor = "current_thread")]
 async fn inlay_hints_are_configurable_stable_and_quiet_by_default() {
@@ -22,8 +22,8 @@ async fn inlay_hints_are_configurable_stable_and_quiet_by_default() {
     let mut reader = server_to_client;
     let workspace_dir = tempdir().unwrap();
     let workspace = Url::from_directory_path(workspace_dir.path()).unwrap();
-    let uri = Url::from_file_path(workspace_dir.path().join("inlay-hints.luma")).unwrap();
-    let shared = Url::from_file_path(workspace_dir.path().join("shared.luma")).unwrap();
+    let uri = Url::from_file_path(workspace_dir.path().join("inlay-hints.lyma")).unwrap();
+    let shared = Url::from_file_path(workspace_dir.path().join("shared.lyma")).unwrap();
 
     send_message(
         &mut writer,
@@ -58,7 +58,7 @@ async fn inlay_hints_are_configurable_stable_and_quiet_by_default() {
     let _initialized_log = read_message(&mut reader).await;
 
     let text = concat!(
-        "@import \"./shared.luma\" as shared\n",
+        "@import \"./shared.lyma\" as shared\n",
         "@profile dev\n",
         "let region = ${shared}\n",
         "service:\n",
@@ -74,7 +74,7 @@ async fn inlay_hints_are_configurable_stable_and_quiet_by_default() {
             "params": {
                 "textDocument": {
                     "uri": uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": text
                 }
@@ -94,7 +94,7 @@ async fn inlay_hints_are_configurable_stable_and_quiet_by_default() {
             "method": "workspace/didChangeConfiguration",
             "params": {
                 "settings": {
-                    "lumals": {
+                    "lymals": {
                         "inlayHints": {
                             "enabled": true,
                             "inferredTypes": true,
@@ -174,7 +174,7 @@ async fn inlay_hints_are_configurable_stable_and_quiet_by_default() {
             "method": "workspace/didChangeConfiguration",
             "params": {
                 "settings": {
-                    "lumals": {
+                    "lymals": {
                         "inlayHints": {
                             "enabled": false
                         }

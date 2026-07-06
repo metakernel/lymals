@@ -9,9 +9,9 @@ use tower_lsp::lsp_types::{
     WorkspaceFolder,
 };
 
-use lumals::{
+use lymals::{
     completion::{CompletionRequest, complete},
-    config::LumalsConfig,
+    config::LymalsConfig,
     server,
     syntax::FileId,
 };
@@ -19,7 +19,7 @@ use lumals::{
 #[tokio::test(flavor = "current_thread")]
 async fn completion_capabilities_and_contextual_items_are_advertised() {
     let workspace = fixture_workspace_uri();
-    let document_uri = fixture_document_uri("workspace/main.luma");
+    let document_uri = fixture_document_uri("workspace/main.lyma");
 
     let (client_to_server, server_stdin) = tokio::io::duplex(16 * 1024);
     let (server_stdout, server_to_client) = tokio::io::duplex(16 * 1024);
@@ -95,7 +95,7 @@ async fn completion_capabilities_and_contextual_items_are_advertised() {
         "@im\n",
         "@profile d\n",
         "@import \"./\"\n",
-        "@use \"./modules/network.luma\" as ne\n",
+        "@use \"./modules/network.lyma\" as ne\n",
         "let region = ${re}\n",
         "let enabled = n\n",
         "rep\n"
@@ -109,7 +109,7 @@ async fn completion_capabilities_and_contextual_items_are_advertised() {
             "params": {
                 "textDocument": {
                     "uri": document_uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": text
                 }
@@ -129,7 +129,7 @@ async fn completion_capabilities_and_contextual_items_are_advertised() {
     );
     assert_eq!(
         import_directive.insert_text.as_deref(),
-        Some("@import \"${1:./shared.luma}\" as ${2:shared}")
+        Some("@import \"${1:./shared.lyma}\" as ${2:shared}")
     );
     assert_eq!(
         import_directive.commit_characters.as_ref().unwrap(),
@@ -141,14 +141,14 @@ async fn completion_capabilities_and_contextual_items_are_advertised() {
     assert_eq!(dev.kind, Some(CompletionItemKind::VALUE));
 
     let path_items = completion_items(&mut writer, &mut reader, &document_uri, 2, 12, 12).await;
-    let shared = find_item(&path_items, "./shared.luma");
+    let shared = find_item(&path_items, "./shared.lyma");
     assert_eq!(shared.kind, Some(CompletionItemKind::FILE));
-    assert_eq!(shared.insert_text.as_deref(), Some("shared.luma"));
+    assert_eq!(shared.insert_text.as_deref(), Some("shared.lyma"));
     assert_eq!(
         shared.commit_characters.as_ref().unwrap(),
         &["\"".to_string(), "'".to_string(), " ".to_string()]
     );
-    assert!(path_items.iter().all(|item| item.label.ends_with(".luma")));
+    assert!(path_items.iter().all(|item| item.label.ends_with(".lyma")));
     assert!(path_items.iter().all(|item| !item.label.contains("..")));
     assert!(
         path_items
@@ -198,12 +198,12 @@ fn import_path_completion_stays_within_safe_local_boundaries() {
     let root = workspace.path();
     fs::create_dir_all(root.join("nested/child")).unwrap();
     fs::create_dir_all(root.join("shared")).unwrap();
-    fs::write(root.join("nested/main.luma"), "@import \"./\"").unwrap();
-    fs::write(root.join("nested/child/inside.luma"), "inside: true\n").unwrap();
-    fs::write(root.join("shared/outside_base_dir.luma"), "outside: true\n").unwrap();
-    fs::write(root.join("nested/README.md"), "not a luma file\n").unwrap();
+    fs::write(root.join("nested/main.lyma"), "@import \"./\"").unwrap();
+    fs::write(root.join("nested/child/inside.lyma"), "inside: true\n").unwrap();
+    fs::write(root.join("shared/outside_base_dir.lyma"), "outside: true\n").unwrap();
+    fs::write(root.join("nested/README.md"), "not a lyma file\n").unwrap();
 
-    let uri = Url::from_file_path(root.join("nested/main.luma")).unwrap();
+    let uri = Url::from_file_path(root.join("nested/main.lyma")).unwrap();
     let response = complete(CompletionRequest {
         uri: &uri,
         text: "@import \"./\"",
@@ -213,7 +213,7 @@ fn import_path_completion_stays_within_safe_local_boundaries() {
             uri: Url::from_directory_path(root).unwrap(),
             name: "workspace".to_string(),
         }],
-        config: &LumalsConfig::default(),
+        config: &LymalsConfig::default(),
     })
     .expect("expected path completions");
 
@@ -225,13 +225,13 @@ fn import_path_completion_stays_within_safe_local_boundaries() {
         .map(|item| item.label.as_str())
         .collect::<Vec<_>>();
 
-    assert!(labels.contains(&"./child/inside.luma"), "{labels:?}");
+    assert!(labels.contains(&"./child/inside.lyma"), "{labels:?}");
     assert!(
         !labels.iter().any(|label| label.contains("..")),
         "{labels:?}"
     );
     assert!(
-        !labels.contains(&"./shared/outside_base_dir.luma"),
+        !labels.contains(&"./shared/outside_base_dir.lyma"),
         "{labels:?}"
     );
     assert!(

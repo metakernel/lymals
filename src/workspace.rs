@@ -4,23 +4,23 @@ use std::path::{Component, Path, PathBuf};
 
 use tower_lsp::lsp_types::{FileEvent, Url, WorkspaceFolder};
 
-use crate::config::LumalsConfig;
+use crate::config::LymalsConfig;
 
-pub const LUMA_GLOB: &str = "**/*.luma";
-pub const WATCH_REGISTRATION_ID: &str = "lumals-watch-luma-files";
+pub const LYMA_GLOB: &str = "**/*.lyma";
+pub const WATCH_REGISTRATION_ID: &str = "lymals-watch-lyma-files";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ValidatedWorkspaceLumaFile {
+pub struct ValidatedWorkspaceLymaFile {
     pub requested_path: PathBuf,
     pub canonical_path: PathBuf,
     pub relative_path: PathBuf,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum WorkspaceLumaFilePolicyError {
+pub enum WorkspaceLymaFilePolicyError {
     WorkspaceIndexingDisabled,
     NonFileUri,
-    NotLuma,
+    NotLyma,
     OutsideAllowedRoots,
     ExcludedByGlob,
     MissingFile,
@@ -68,11 +68,11 @@ impl WorkspaceState {
     pub fn note_watched_file_changes(
         &mut self,
         changes: &[FileEvent],
-        config: &LumalsConfig,
+        config: &LymalsConfig,
     ) -> Vec<Url> {
         let mut invalidated = BTreeSet::new();
         for change in changes {
-            if is_workspace_luma_uri(&change.uri, &self.folders, config) {
+            if is_workspace_lyma_uri(&change.uri, &self.folders, config) {
                 invalidated.insert(change.uri.clone());
             }
         }
@@ -111,12 +111,12 @@ pub fn folders_from_initialize_params(
         .unwrap_or_default()
 }
 
-pub fn is_workspace_luma_uri(
+pub fn is_workspace_lyma_uri(
     uri: &Url,
     workspace_folders: &[WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> bool {
-    if !config.index_workspace || uri.scheme() != "file" || !uri.path().ends_with(".luma") {
+    if !config.index_workspace || uri.scheme() != "file" || !uri.path().ends_with(".lyma") {
         return false;
     }
 
@@ -135,48 +135,48 @@ pub fn is_workspace_luma_uri(
     )
 }
 
-pub fn validate_workspace_luma_file_uri(
+pub fn validate_workspace_lyma_file_uri(
     uri: &Url,
     workspace_folders: &[WorkspaceFolder],
-    config: &LumalsConfig,
-) -> Result<ValidatedWorkspaceLumaFile, WorkspaceLumaFilePolicyError> {
+    config: &LymalsConfig,
+) -> Result<ValidatedWorkspaceLymaFile, WorkspaceLymaFilePolicyError> {
     if !config.index_workspace {
-        return Err(WorkspaceLumaFilePolicyError::WorkspaceIndexingDisabled);
+        return Err(WorkspaceLymaFilePolicyError::WorkspaceIndexingDisabled);
     }
     if uri.scheme() != "file" {
-        return Err(WorkspaceLumaFilePolicyError::NonFileUri);
+        return Err(WorkspaceLymaFilePolicyError::NonFileUri);
     }
-    if !uri.path().ends_with(".luma") {
-        return Err(WorkspaceLumaFilePolicyError::NotLuma);
+    if !uri.path().ends_with(".lyma") {
+        return Err(WorkspaceLymaFilePolicyError::NotLyma);
     }
 
-    let requested_path = file_url_to_path(uri).ok_or(WorkspaceLumaFilePolicyError::NonFileUri)?;
+    let requested_path = file_url_to_path(uri).ok_or(WorkspaceLymaFilePolicyError::NonFileUri)?;
     let canonical_path = fs::canonicalize(&requested_path)
         .map(normalize_path)
-        .map_err(|_| WorkspaceLumaFilePolicyError::MissingFile)?;
+        .map_err(|_| WorkspaceLymaFilePolicyError::MissingFile)?;
 
-    if !canonical_path.to_string_lossy().ends_with(".luma") {
-        return Err(WorkspaceLumaFilePolicyError::NotLuma);
+    if !canonical_path.to_string_lossy().ends_with(".lyma") {
+        return Err(WorkspaceLymaFilePolicyError::NotLyma);
     }
 
     let metadata =
-        fs::metadata(&canonical_path).map_err(|_| WorkspaceLumaFilePolicyError::MissingFile)?;
+        fs::metadata(&canonical_path).map_err(|_| WorkspaceLymaFilePolicyError::MissingFile)?;
     if !metadata.is_file() {
-        return Err(WorkspaceLumaFilePolicyError::NotRegularFile);
+        return Err(WorkspaceLymaFilePolicyError::NotRegularFile);
     }
 
     let relative_path =
         canonical_path_relative_to_any_root(&canonical_path, workspace_folders, config)
-            .ok_or(WorkspaceLumaFilePolicyError::OutsideAllowedRoots)?;
+            .ok_or(WorkspaceLymaFilePolicyError::OutsideAllowedRoots)?;
 
     if matches_any_glob(
         &normalize_path_for_glob(&relative_path),
         &config.exclude_globs,
     ) {
-        return Err(WorkspaceLumaFilePolicyError::ExcludedByGlob);
+        return Err(WorkspaceLymaFilePolicyError::ExcludedByGlob);
     }
 
-    Ok(ValidatedWorkspaceLumaFile {
+    Ok(ValidatedWorkspaceLymaFile {
         requested_path,
         canonical_path,
         relative_path,
@@ -185,7 +185,7 @@ pub fn validate_workspace_luma_file_uri(
 
 pub fn effective_roots(
     workspace_folders: &[WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Vec<PathBuf> {
     let mut roots = Vec::new();
     for folder in workspace_folders {
@@ -234,7 +234,7 @@ fn parse_root(root: &str) -> Option<PathBuf> {
 fn path_relative_to_any_root(
     path: &Path,
     workspace_folders: &[WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Option<PathBuf> {
     path_relative_to_roots(path, &effective_roots(workspace_folders, config))
 }
@@ -242,7 +242,7 @@ fn path_relative_to_any_root(
 fn canonical_path_relative_to_any_root(
     path: &Path,
     workspace_folders: &[WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Option<PathBuf> {
     path_relative_to_roots(path, &effective_canonical_roots(workspace_folders, config))
 }
@@ -250,7 +250,7 @@ fn canonical_path_relative_to_any_root(
 fn existing_or_lexical_relative_path(
     path: &Path,
     workspace_folders: &[WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Option<PathBuf> {
     if let Ok(canonical_path) = fs::canonicalize(path).map(normalize_path) {
         return canonical_path_relative_to_any_root(&canonical_path, workspace_folders, config);
@@ -261,7 +261,7 @@ fn existing_or_lexical_relative_path(
 
 fn effective_canonical_roots(
     workspace_folders: &[WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Vec<PathBuf> {
     let mut roots = effective_roots(workspace_folders, config)
         .into_iter()
@@ -365,8 +365,8 @@ fn glob_chars_match(value: &[char], pattern: &[char]) -> bool {
 mod tests {
     use tower_lsp::lsp_types::WorkspaceFolder;
 
-    use super::{LUMA_GLOB, WorkspaceState, folders_from_initialize_params, glob_matches};
-    use crate::config::LumalsConfig;
+    use super::{LYMA_GLOB, WorkspaceState, folders_from_initialize_params, glob_matches};
+    use crate::config::LymalsConfig;
 
     #[test]
     fn initializes_workspace_from_root_uri_when_folders_are_missing() {
@@ -382,9 +382,9 @@ mod tests {
 
     #[test]
     fn glob_matching_supports_recursive_patterns() {
-        assert!(glob_matches("nested/file.luma", LUMA_GLOB));
-        assert!(glob_matches("a/generated/file.luma", "**/generated/**"));
-        assert!(!glob_matches("a/source/file.luma", "**/generated/**"));
+        assert!(glob_matches("nested/file.lyma", LYMA_GLOB));
+        assert!(glob_matches("a/generated/file.lyma", "**/generated/**"));
+        assert!(!glob_matches("a/source/file.lyma", "**/generated/**"));
     }
 
     #[test]
@@ -392,10 +392,10 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let workspace_uri = tower_lsp::lsp_types::Url::from_directory_path(temp.path()).unwrap();
         let source_uri =
-            tower_lsp::lsp_types::Url::from_file_path(temp.path().join("source/test.luma"))
+            tower_lsp::lsp_types::Url::from_file_path(temp.path().join("source/test.lyma"))
                 .unwrap();
         let generated_uri =
-            tower_lsp::lsp_types::Url::from_file_path(temp.path().join("generated/test.luma"))
+            tower_lsp::lsp_types::Url::from_file_path(temp.path().join("generated/test.lyma"))
                 .unwrap();
 
         let mut workspace = WorkspaceState::default();
@@ -404,9 +404,9 @@ mod tests {
             name: "workspace".to_string(),
         }]);
 
-        let config = LumalsConfig {
+        let config = LymalsConfig {
             exclude_globs: vec!["**/generated/**".to_string()],
-            ..LumalsConfig::default()
+            ..LymalsConfig::default()
         };
 
         let invalidated = workspace.note_watched_file_changes(

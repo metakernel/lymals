@@ -61,7 +61,7 @@ async fn vscode_compatible_clients_get_static_feature_capabilities() {
     );
     assert_array_contains(
         &capabilities["executeCommandProvider"]["commands"],
-        "lumals.serverStatus",
+        "lymals.serverStatus",
     );
     assert_array_contains(
         &capabilities["codeActionProvider"]["codeActionKinds"],
@@ -79,7 +79,7 @@ async fn vscode_compatible_clients_get_static_feature_capabilities() {
 async fn neovim_style_clients_negotiate_utf16_and_simple_stdio_registration() {
     let temp = tempdir().unwrap();
     let root_uri = Url::from_directory_path(temp.path()).unwrap();
-    let doc_uri = Url::from_file_path(temp.path().join("main.luma")).unwrap();
+    let doc_uri = Url::from_file_path(temp.path().join("main.lyma")).unwrap();
     let mut harness = LspHarness::start().await;
 
     let response = harness

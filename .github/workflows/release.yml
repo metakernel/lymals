@@ -21,14 +21,14 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            archive: lumals-linux-x86_64
-            binary: lumals
+            archive: lymals-linux-x86_64
+            binary: lymals
           - os: macos-14
-            archive: lumals-macos-aarch64
-            binary: lumals
+            archive: lymals-macos-aarch64
+            binary: lymals
           - os: windows-latest
-            archive: lumals-windows-x86_64
-            binary: lumals.exe
+            archive: lymals-windows-x86_64
+            binary: lymals.exe
 
     steps:
       - name: Checkout
@@ -41,7 +41,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build release binary
-        run: cargo build --release --bin lumals
+        run: cargo build --release --bin lymals
 
       - name: Stage binary
         shell: pwsh

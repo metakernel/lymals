@@ -1,4 +1,4 @@
-use lumals::{
+use lymals::{
     capabilities,
     semantic_tokens::{self, TOKEN_MODIFIERS, TOKEN_TYPES},
     syntax::FileId,
@@ -59,10 +59,10 @@ fn semantic_tokens_legend_snapshot_is_stable() {
 fn semantic_tokens_snapshot_captures_delta_encoded_output() {
     let text = concat!(
         "---\n",
-        "@luma 1\n",
-        "@import \"./shared.luma\" as shared\n",
-        "@include partials/base.luma\n",
-        "@use \"./legacy.luma\" as legacy\n",
+        "@lyma 1\n",
+        "@import \"./shared.lyma\" as shared\n",
+        "@include partials/base.lyma\n",
+        "@use \"./legacy.lyma\" as legacy\n",
         "let enabled = true\n",
         "let nothing = nil\n",
         "let count = 3.14\n",
@@ -80,7 +80,7 @@ fn semantic_tokens_snapshot_captures_delta_encoded_output() {
         "# trailing comment\n",
     );
 
-    let tokens = semantic_tokens::tokenize(FileId(33), "fixture.luma", text);
+    let tokens = semantic_tokens::tokenize(FileId(33), "fixture.lyma", text);
     let rendered = semantic_tokens::debug_render(text, &tokens);
     let actual = tokens
         .data
@@ -104,16 +104,16 @@ fn semantic_tokens_snapshot_captures_delta_encoded_output() {
 
     insta::assert_snapshot!(actual, @r###"
     [0,0,3,5,0] operator [] ---
-    [1,0,5,6,0] decorator [] @luma
+    [1,0,5,6,0] decorator [] @lyma
     [0,6,1,3,0] number [] 1
     [1,0,7,6,0] decorator [] @import
-    [0,8,15,2,4] string ["import"] "./shared.luma"
+    [0,8,15,2,4] string ["import"] "./shared.lyma"
     [0,16,2,0,0] keyword [] as
     [0,3,6,7,1] variable ["declaration"] shared
     [1,0,8,6,0] decorator [] @include
-    [0,9,18,2,8] string ["include"] partials/base.luma
+    [0,9,18,2,8] string ["include"] partials/base.lyma
     [1,0,4,6,16] decorator ["deprecated"] @use
-    [0,5,15,2,20] string ["import", "deprecated"] "./legacy.luma"
+    [0,5,15,2,20] string ["import", "deprecated"] "./legacy.lyma"
     [0,16,2,0,0] keyword [] as
     [0,3,6,7,17] variable ["declaration", "deprecated"] legacy
     [1,0,3,0,0] keyword [] let

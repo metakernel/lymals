@@ -33,7 +33,7 @@
 
 | Client shape | Status | Caveats |
 | --- | --- | --- |
-| VS Code-compatible stdio client | Supported via downloaded binary | v1 does not publish a VSIX. Configure a generic/custom LSP client to run `lumals --stdio`, associate `*.luma` with `luma`, and keep logs off stdout. `lumals` currently advertises UTF-16 positions for all clients. |
-| Neovim built-in LSP | Supported via downloaded binary | Use `vim.lsp.start` with `cmd = { "lumals", "--stdio" }`; root detection should point at the project/workspace root. `lumals` currently advertises UTF-16 positions for all clients, including clients that also support UTF-8. |
+| VS Code-compatible stdio client | Supported via downloaded binary | v1 does not publish a VSIX. Configure a generic/custom LSP client to run `lymals --stdio`, associate `*.lyma` with `lyma`, and keep logs off stdout. `lymals` currently advertises UTF-16 positions for all clients. |
+| Neovim built-in LSP | Supported via downloaded binary | Use `vim.lsp.start` with `cmd = { "lymals", "--stdio" }`; root detection should point at the project/workspace root. `lymals` currently advertises UTF-16 positions for all clients, including clients that also support UTF-8. |
 
 Automated compatibility coverage lives in `tests/client_compat_tests.rs` and checks representative initialization/capability negotiation plus a basic open/diagnostics/hover round trip.

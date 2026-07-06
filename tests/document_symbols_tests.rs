@@ -1,4 +1,4 @@
-use lumals::{
+use lymals::{
     ast::{
         AstFile, Directive, Document, DocumentItem, LetBinding, Mapping, MappingEntry, Node,
         Scalar, ScalarKind, Sequence, SequenceItem, TagNode,
@@ -27,9 +27,9 @@ fn document_symbol_tree_snapshot_captures_hierarchy_and_ranges() {
     let file_id = FileId(11);
     let text = concat!(
         "---\n",
-        "@luma 1\n",
-        "@import \"./shared.luma\" as shared\n",
-        "@include \"./partials/base.luma\"\n",
+        "@lyma 1\n",
+        "@import \"./shared.lyma\" as shared\n",
+        "@include \"./partials/base.lyma\"\n",
         "let region = \"us-east-1\"\n",
         "services:\n",
         "- !lambda worker\n",
@@ -38,7 +38,7 @@ fn document_symbol_tree_snapshot_captures_hierarchy_and_ranges() {
         "catalog:\n",
         "- !Ref shared\n",
     );
-    let source = SourceText::new(file_id, "fixture.luma", text);
+    let source = SourceText::new(file_id, "fixture.lyma", text);
     let line_starts = line_starts(text);
     let ast = AstFile {
         span: span(file_id, 0, text.len()),
@@ -48,19 +48,19 @@ fn document_symbol_tree_snapshot_captures_hierarchy_and_ranges() {
                 separator_span: Some(line_span(file_id, text, &line_starts, 0)),
                 items: vec![
                     DocumentItem::Directive(Directive {
-                        name: "@luma".to_string(),
+                        name: "@lyma".to_string(),
                         span: line_span(file_id, text, &line_starts, 1),
                         value: Some("1".to_string()),
                     }),
                     DocumentItem::Directive(Directive {
                         name: "@import".to_string(),
                         span: line_span(file_id, text, &line_starts, 2),
-                        value: Some("\"./shared.luma\" as shared".to_string()),
+                        value: Some("\"./shared.lyma\" as shared".to_string()),
                     }),
                     DocumentItem::Directive(Directive {
                         name: "@include".to_string(),
                         span: line_span(file_id, text, &line_starts, 3),
-                        value: Some("\"./partials/base.luma\"".to_string()),
+                        value: Some("\"./partials/base.lyma\"".to_string()),
                     }),
                     DocumentItem::Let(LetBinding {
                         name: "region".to_string(),
@@ -150,7 +150,7 @@ fn document_symbol_tree_snapshot_captures_hierarchy_and_ranges() {
           {
             "detail": "1",
             "kind": "Namespace",
-            "name": "@luma",
+            "name": "@lyma",
             "range": {
               "end": {
                 "character": 7,
@@ -177,7 +177,7 @@ fn document_symbol_tree_snapshot_captures_hierarchy_and_ranges() {
               {
                 "detail": "@import",
                 "kind": "File",
-                "name": "./shared.luma",
+                "name": "./shared.lyma",
                 "range": {
                   "end": {
                     "character": 33,
@@ -225,7 +225,7 @@ fn document_symbol_tree_snapshot_captures_hierarchy_and_ranges() {
                 }
               }
             ],
-            "detail": "\"./shared.luma\" as shared",
+            "detail": "\"./shared.lyma\" as shared",
             "kind": "Namespace",
             "name": "@import",
             "range": {
@@ -254,7 +254,7 @@ fn document_symbol_tree_snapshot_captures_hierarchy_and_ranges() {
               {
                 "detail": "@include",
                 "kind": "File",
-                "name": "./partials/base.luma",
+                "name": "./partials/base.lyma",
                 "range": {
                   "end": {
                     "character": 31,
@@ -277,7 +277,7 @@ fn document_symbol_tree_snapshot_captures_hierarchy_and_ranges() {
                 }
               }
             ],
-            "detail": "\"./partials/base.luma\"",
+            "detail": "\"./partials/base.lyma\"",
             "kind": "Namespace",
             "name": "@include",
             "range": {
@@ -595,7 +595,7 @@ async fn lsp_document_symbols_snapshot_returns_nested_symbols() {
 
     let mut writer = client_to_server;
     let mut reader = server_to_client;
-    let uri = Url::parse("file:///document-symbols.luma").unwrap();
+    let uri = Url::parse("file:///document-symbols.lyma").unwrap();
 
     send_message(
         &mut writer,
@@ -635,9 +635,9 @@ async fn lsp_document_symbols_snapshot_returns_nested_symbols() {
             "params": {
                 "textDocument": {
                     "uri": uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
-                    "text": "---\n@import \"./shared.luma\" as shared\n@include \"./partials/base.luma\"\nlet region = \"us-east-1\"\n!Ref shared\n"
+                    "text": "---\n@import \"./shared.lyma\" as shared\n@include \"./partials/base.lyma\"\nlet region = \"us-east-1\"\n!Ref shared\n"
                 }
             }
         }),
@@ -669,7 +669,7 @@ async fn lsp_document_symbols_snapshot_returns_nested_symbols() {
               {
                 "detail": "@import",
                 "kind": 1,
-                "name": "./shared.luma",
+                "name": "./shared.lyma",
                 "range": {
                   "end": {
                     "character": 33,
@@ -717,7 +717,7 @@ async fn lsp_document_symbols_snapshot_returns_nested_symbols() {
                 }
               }
             ],
-            "detail": "\"./shared.luma\" as shared",
+            "detail": "\"./shared.lyma\" as shared",
             "kind": 3,
             "name": "@import",
             "range": {
@@ -746,7 +746,7 @@ async fn lsp_document_symbols_snapshot_returns_nested_symbols() {
               {
                 "detail": "@include",
                 "kind": 1,
-                "name": "./partials/base.luma",
+                "name": "./partials/base.lyma",
                 "range": {
                   "end": {
                     "character": 31,
@@ -769,7 +769,7 @@ async fn lsp_document_symbols_snapshot_returns_nested_symbols() {
                 }
               }
             ],
-            "detail": "\"./partials/base.luma\"",
+            "detail": "\"./partials/base.lyma\"",
             "kind": 3,
             "name": "@include",
             "range": {

@@ -1,1 +1,1 @@
-not a luma file
+not a lyma file

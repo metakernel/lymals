@@ -9,14 +9,14 @@ use tower_lsp::lsp_types::{
 };
 
 use crate::{
-    config::LumalsConfig,
+    config::LymalsConfig,
     document::DocumentSnapshot,
     parser,
     position::LineIndex,
     semantic::SemanticDocument,
     symbols::{Definition, DefinitionKind},
     syntax::{FileId, ParsedFile, SourceSpan, Symbol},
-    workspace::{effective_roots, file_url_to_path, is_workspace_luma_uri},
+    workspace::{effective_roots, file_url_to_path, is_workspace_lyma_uri},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -179,7 +179,7 @@ impl WorkspaceIndex {
     pub fn load(
         open_documents: &[DocumentSnapshot],
         workspace_folders: &[WorkspaceFolder],
-        config: &LumalsConfig,
+        config: &LymalsConfig,
     ) -> Self {
         let mut index = Self::default();
         let mut seen = BTreeSet::new();
@@ -220,7 +220,7 @@ impl WorkspaceIndex {
                         return;
                     };
                     if !seen.insert(uri.clone())
-                        || !is_workspace_luma_uri(&uri, workspace_folders, config)
+                        || !is_workspace_lyma_uri(&uri, workspace_folders, config)
                     {
                         return;
                     }
@@ -311,12 +311,12 @@ impl WorkspaceIndex {
         file_id: FileId,
         text: String,
         workspace_folders: &[WorkspaceFolder],
-        config: &LumalsConfig,
+        config: &LymalsConfig,
     ) {
         let parsed = parser::parse_fallback(file_id, uri.as_str(), &text);
         let file = match parsed.file {
             ParsedFile::Fallback(file) => file,
-            #[cfg(feature = "upstream-luma")]
+            #[cfg(feature = "upstream-lyma")]
             ParsedFile::Upstream(_) => return,
         };
         let semantic = SemanticDocument::from_ast(&file.ast);
@@ -552,7 +552,7 @@ fn walk_workspace(root: &Path, visit: &mut dyn FnMut(&Path)) {
         };
         if file_type.is_dir() {
             walk_workspace(&path, visit);
-        } else if file_type.is_file() && path.extension().is_some_and(|ext| ext == "luma") {
+        } else if file_type.is_file() && path.extension().is_some_and(|ext| ext == "lyma") {
             visit(&path);
         }
     }
@@ -561,7 +561,7 @@ fn walk_workspace(root: &Path, visit: &mut dyn FnMut(&Path)) {
 fn relative_path_for_workspace(
     path: &Path,
     workspace_folders: &[WorkspaceFolder],
-    config: &LumalsConfig,
+    config: &LymalsConfig,
 ) -> Option<PathBuf> {
     effective_roots(workspace_folders, config)
         .into_iter()

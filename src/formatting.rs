@@ -20,16 +20,16 @@ pub fn format_text(
 ) -> FormatResult {
     match backend {
         ParserBackend::Fallback => fallback_format_result(text),
-        #[cfg(feature = "upstream-luma")]
-        ParserBackend::UpstreamLuma => {
+        #[cfg(feature = "upstream-lyma")]
+        ParserBackend::UpstreamLyma => {
             if requires_conservative_preservation(text) {
                 fallback_format_result(text)
             } else {
                 upstream_format_result(_file_id, _name, text)
             }
         }
-        #[cfg(not(feature = "upstream-luma"))]
-        ParserBackend::UpstreamLuma => fallback_format_result(text),
+        #[cfg(not(feature = "upstream-lyma"))]
+        ParserBackend::UpstreamLyma => fallback_format_result(text),
     }
 }
 
@@ -70,9 +70,9 @@ pub fn format_range(text: &str, file_id: FileId, range: SourceSpan) -> Option<Te
     })
 }
 
-#[cfg(feature = "upstream-luma")]
+#[cfg(feature = "upstream-lyma")]
 fn upstream_format_result(file_id: FileId, name: &str, text: &str) -> FormatResult {
-    let formatted = luma::parser::format_str(luma::parser::FileId(file_id.0), name, text);
+    let formatted = lyma::parser::format_str(lyma::parser::FileId(file_id.0), name, text);
     let line_ending = preferred_line_ending(text);
     let formatted_text = apply_line_ending(&formatted.formatted.text, line_ending);
 
@@ -280,7 +280,7 @@ fn is_block_scalar_header(value: &str) -> bool {
     matches!(value.chars().next(), Some('|') | Some('>'))
 }
 
-#[cfg(feature = "upstream-luma")]
+#[cfg(feature = "upstream-lyma")]
 fn requires_conservative_preservation(text: &str) -> bool {
     text.lines().any(|line| {
         let trimmed = line.trim_start();

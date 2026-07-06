@@ -1,0 +1,6 @@
+@import "https://example.invalid/pkg.lyma"
+@include "../escape.lyma"
+root:
+	bad: true
+  duplicate: one
+  duplicate: two

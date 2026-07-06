@@ -9,7 +9,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 
-use lumals::{
+use lymals::{
     formatting, parser, server,
     syntax::{FileId, SourceSpan},
 };
@@ -58,8 +58,8 @@ fn formatting_preserves_lua_blocks_and_crlf() {
         "```\r\n",
         "value:  ok  \r\n"
     );
-    let parsed = parser::parse(FileId(2), "crlf.luma", input);
-    let formatted = formatting::format_text(FileId(2), "crlf.luma", parsed.backend, input).text;
+    let parsed = parser::parse(FileId(2), "crlf.lyma", input);
+    let formatted = formatting::format_text(FileId(2), "crlf.lyma", parsed.backend, input).text;
 
     assert!(formatted.contains("local value = 1  \r\n"));
     assert!(formatted.contains("  if value then   \r\n"));
@@ -81,7 +81,7 @@ async fn lsp_formatting_and_range_formatting_are_advertised_and_minimal() {
 
     let mut writer = client_to_server;
     let mut reader = server_to_client;
-    let uri = "file:///formatting-test.luma";
+    let uri = "file:///formatting-test.lyma";
 
     send_message(
         &mut writer,
@@ -118,7 +118,7 @@ async fn lsp_formatting_and_range_formatting_are_advertised_and_minimal() {
             "params": {
                 "textDocument": {
                     "uri": uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": "root:\n   child:  one  \n   other: two\n"
                 }
@@ -189,7 +189,7 @@ fn fixture_paths(dir: &Path) -> Vec<PathBuf> {
     let mut entries = fs::read_dir(dir)
         .unwrap()
         .map(|entry| entry.unwrap().path())
-        .filter(|path| path.extension().is_some_and(|ext| ext == "luma"))
+        .filter(|path| path.extension().is_some_and(|ext| ext == "lyma"))
         .collect::<Vec<_>>();
     entries.sort();
     entries

@@ -3,9 +3,9 @@ use tower_lsp::lsp_types::{DocumentSymbol, DocumentSymbolParams, DocumentSymbolR
 
 use crate::{parser, symbols::DocumentSymbolNode, syntax::SourceSpan};
 
-use super::LumaLanguageServer;
+use super::LymaLanguageServer;
 
-impl LumaLanguageServer {
+impl LymaLanguageServer {
     pub(super) async fn handle_document_symbol(
         &self,
         params: DocumentSymbolParams,
@@ -15,12 +15,12 @@ impl LumaLanguageServer {
         let response = self.state.with_document(&uri, |document| {
             let text = document.text();
             let parsed = parser::parse_fallback(document.file_id(), document.uri().as_str(), &text);
-            #[cfg(feature = "upstream-luma")]
+            #[cfg(feature = "upstream-lyma")]
             let crate::syntax::ParsedFile::Fallback(file) = &parsed.file else {
                 return None;
             };
 
-            #[cfg(not(feature = "upstream-luma"))]
+            #[cfg(not(feature = "upstream-lyma"))]
             let file = match &parsed.file {
                 crate::syntax::ParsedFile::Fallback(file) => file,
             };

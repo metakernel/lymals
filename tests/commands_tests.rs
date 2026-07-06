@@ -6,7 +6,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::{Duration, timeout};
 use tower_lsp::Server;
 
-use lumals::server;
+use lymals::server;
 
 #[tokio::test(flavor = "current_thread")]
 async fn execute_command_provider_registers_safe_commands() {
@@ -18,24 +18,24 @@ async fn execute_command_provider_registers_safe_commands() {
         .as_array()
         .unwrap();
 
-    assert!(commands.iter().any(|value| value == "lumals.restartIndex"));
+    assert!(commands.iter().any(|value| value == "lymals.restartIndex"));
     assert!(
         commands
             .iter()
-            .any(|value| value == "lumals.showSyntaxTree")
+            .any(|value| value == "lymals.showSyntaxTree")
     );
-    assert!(commands.iter().any(|value| value == "lumals.showConfig"));
+    assert!(commands.iter().any(|value| value == "lymals.showConfig"));
     assert!(
         commands
             .iter()
-            .any(|value| value == "lumals.formatWorkspaceFile")
+            .any(|value| value == "lymals.formatWorkspaceFile")
     );
     assert!(
         commands
             .iter()
-            .any(|value| value == "lumals.explainDiagnostic")
+            .any(|value| value == "lymals.explainDiagnostic")
     );
-    assert!(commands.iter().any(|value| value == "lumals.serverStatus"));
+    assert!(commands.iter().any(|value| value == "lymals.serverStatus"));
 
     initialized(&mut writer, &mut reader).await;
     shutdown_server(&mut writer, &mut reader, server_task).await;
@@ -54,38 +54,38 @@ async fn execute_command_validates_arguments_and_returns_safe_errors() {
         &mut writer,
         &mut reader,
         2,
-        "lumals.showSyntaxTree",
+        "lymals.showSyntaxTree",
         json!([]),
     )
     .await;
     assert_eq!(missing_uri["error"]["code"], -32602);
     assert_eq!(
         missing_uri["error"]["message"],
-        "lumals.showSyntaxTree expects a single uri argument"
+        "lymals.showSyntaxTree expects a single uri argument"
     );
 
     let outside_uri =
-        tower_lsp::lsp_types::Url::from_file_path(outside.path().join("escape.luma")).unwrap();
-    fs::write(outside.path().join("escape.luma"), "root:  bad\n").unwrap();
+        tower_lsp::lsp_types::Url::from_file_path(outside.path().join("escape.lyma")).unwrap();
+    fs::write(outside.path().join("escape.lyma"), "root:  bad\n").unwrap();
     let blocked = execute_command(
         &mut writer,
         &mut reader,
         3,
-        "lumals.formatWorkspaceFile",
+        "lymals.formatWorkspaceFile",
         json!([{ "uri": outside_uri }]),
     )
     .await;
     assert_eq!(blocked["error"]["code"], -32602);
     assert_eq!(
         blocked["error"]["message"],
-        "workspace file must stay within configured roots, resolve to a regular .luma file, and end with .luma"
+        "workspace file must stay within configured roots, resolve to a regular .lyma file, and end with .lyma"
     );
 
     let unknown_code = execute_command(
         &mut writer,
         &mut reader,
         4,
-        "lumals.explainDiagnostic",
+        "lymals.explainDiagnostic",
         json!(["L999"]),
     )
     .await;
@@ -100,7 +100,7 @@ async fn execute_command_returns_parse_only_results() {
     let (mut writer, mut reader, server_task) = start_server().await;
 
     let workspace = tempdir().unwrap();
-    let file_path = workspace.path().join("sample.luma");
+    let file_path = workspace.path().join("sample.lyma");
     fs::write(&file_path, "root:\n   child:  one  \n").unwrap();
     let uri = tower_lsp::lsp_types::Url::from_file_path(&file_path).unwrap();
 
@@ -119,7 +119,7 @@ async fn execute_command_returns_parse_only_results() {
         &mut writer,
         &mut reader,
         2,
-        "lumals.showSyntaxTree",
+        "lymals.showSyntaxTree",
         json!([{ "uri": uri }]),
     )
     .await;
@@ -132,7 +132,7 @@ async fn execute_command_returns_parse_only_results() {
         &mut writer,
         &mut reader,
         3,
-        "lumals.explainDiagnostic",
+        "lymals.explainDiagnostic",
         json!([{ "code": "L003" }]),
     )
     .await;
@@ -143,7 +143,7 @@ async fn execute_command_returns_parse_only_results() {
         &mut writer,
         &mut reader,
         4,
-        "lumals.formatWorkspaceFile",
+        "lymals.formatWorkspaceFile",
         json!([{ "uri": uri }]),
     )
     .await;
@@ -155,30 +155,30 @@ async fn execute_command_returns_parse_only_results() {
         "root:\n   child:  one  \n"
     );
 
-    let config = execute_command(&mut writer, &mut reader, 5, "lumals.showConfig", json!([])).await;
-    assert_eq!(config["result"]["command"], "lumals.showConfig");
+    let config = execute_command(&mut writer, &mut reader, 5, "lymals.showConfig", json!([])).await;
+    assert_eq!(config["result"]["command"], "lymals.showConfig");
     assert_eq!(config["result"]["parseOnly"], true);
 
     let restart = execute_command(
         &mut writer,
         &mut reader,
         6,
-        "lumals.restartIndex",
+        "lymals.restartIndex",
         json!([]),
     )
     .await;
-    assert_eq!(restart["result"]["command"], "lumals.restartIndex");
+    assert_eq!(restart["result"]["command"], "lymals.restartIndex");
     assert_eq!(restart["result"]["parseOnly"], true);
 
     let status = execute_command(
         &mut writer,
         &mut reader,
         7,
-        "lumals.serverStatus",
+        "lymals.serverStatus",
         json!([]),
     )
     .await;
-    assert_eq!(status["result"]["command"], "lumals.serverStatus");
+    assert_eq!(status["result"]["command"], "lymals.serverStatus");
     assert_eq!(status["result"]["parseOnly"], true);
     assert_eq!(status["result"]["openDocuments"], 1);
 
@@ -191,7 +191,7 @@ async fn format_workspace_file_blocks_outside_roots_without_mutating_files() {
 
     let workspace = tempdir().unwrap();
     let outside = tempdir().unwrap();
-    let outside_path = outside.path().join("escape.luma");
+    let outside_path = outside.path().join("escape.lyma");
     fs::write(&outside_path, "root:\n   child:  outside  \n").unwrap();
     let outside_uri = tower_lsp::lsp_types::Url::from_file_path(&outside_path).unwrap();
 
@@ -202,7 +202,7 @@ async fn format_workspace_file_blocks_outside_roots_without_mutating_files() {
         &mut writer,
         &mut reader,
         2,
-        "lumals.formatWorkspaceFile",
+        "lymals.formatWorkspaceFile",
         json!([{ "uri": outside_uri }]),
     )
     .await;
@@ -210,7 +210,7 @@ async fn format_workspace_file_blocks_outside_roots_without_mutating_files() {
     assert_eq!(blocked["error"]["code"], -32602);
     assert_eq!(
         blocked["error"]["message"],
-        "workspace file must stay within configured roots, resolve to a regular .luma file, and end with .luma"
+        "workspace file must stay within configured roots, resolve to a regular .lyma file, and end with .lyma"
     );
     assert_eq!(
         fs::read_to_string(&outside_path).unwrap(),
@@ -224,10 +224,10 @@ async fn format_workspace_file_blocks_outside_roots_without_mutating_files() {
 async fn format_workspace_file_blocks_symlink_escape_when_supported() {
     let workspace = tempdir().unwrap();
     let outside = tempdir().unwrap();
-    let outside_path = outside.path().join("escape.luma");
+    let outside_path = outside.path().join("escape.lyma");
     fs::write(&outside_path, "root:\n  child: escape\n").unwrap();
 
-    let link_path = workspace.path().join("link.luma");
+    let link_path = workspace.path().join("link.lyma");
     if try_create_file_symlink(&outside_path, &link_path).is_err() {
         return;
     }
@@ -242,7 +242,7 @@ async fn format_workspace_file_blocks_symlink_escape_when_supported() {
         &mut writer,
         &mut reader,
         2,
-        "lumals.formatWorkspaceFile",
+        "lymals.formatWorkspaceFile",
         json!([{ "uri": link_uri }]),
     )
     .await;
@@ -250,7 +250,7 @@ async fn format_workspace_file_blocks_symlink_escape_when_supported() {
     assert_eq!(blocked["error"]["code"], -32602);
     assert_eq!(
         blocked["error"]["message"],
-        "workspace file must stay within configured roots, resolve to a regular .luma file, and end with .luma"
+        "workspace file must stay within configured roots, resolve to a regular .lyma file, and end with .lyma"
     );
 
     shutdown_server(&mut writer, &mut reader, server_task).await;
@@ -323,7 +323,7 @@ async fn open_doc(
             "params": {
                 "textDocument": {
                     "uri": uri,
-                    "languageId": "luma",
+                    "languageId": "lyma",
                     "version": 1,
                     "text": text
                 }

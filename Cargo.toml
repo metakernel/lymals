@@ -1,9 +1,9 @@
 [package]
-name = "lumals"
+name = "lymals"
 version = "0.0.0"
 edition = "2024"
 rust-version = "1.85"
-description = "Parse-only Luma language server"
+description = "Parse-only Lyma language server"
 license = "MIT"
 # Guardrail: v1 distributes binary archives only. Do not publish a crate until
 # versioning, licensing, and release artifact validation policy is completed.
@@ -13,7 +13,7 @@ publish = false
 path = "src/lib.rs"
 
 [[bin]]
-name = "lumals"
+name = "lymals"
 path = "src/main.rs"
 
 [[bench]]
@@ -28,14 +28,14 @@ parse-only = []
 fallback-parser = []
 # Reserved for future direct upstream integration; disabled by default so the
 # standalone binary keeps a local/fallback parser path.
-upstream-luma = ["dep:luma", "luma/parser"]
+upstream-lyma = ["dep:lyma", "lyma/parser"]
 # Reserved extension point for a future non-default evaluation stub/integration.
 eval = []
 
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive"] }
-luma = { git = "https://github.com/metakernel/luma", rev = "fab0c21b1e32b837a37a8ef738fd2b64364d6f81", optional = true, default-features = false }
+lyma = { git = "https://github.com/metakernel/lyma", rev = "fab0c21b1e32b837a37a8ef738fd2b64364d6f81", optional = true, default-features = false }
 miette = { version = "7.4", features = ["fancy-no-backtrace"] }
 parking_lot = "0.12"
 ropey = "1.6"

@@ -7,7 +7,7 @@ use crate::{
         AstFile, Directive, DocumentItem, LetBinding, MappingEntry, Node, Scalar, ScalarKind,
         Sequence, TagNode,
     },
-    config::LumalsConfig,
+    config::LymalsConfig,
     document::DocumentSnapshot,
     imports::resolve_guarded_import,
     parser,
@@ -15,7 +15,7 @@ use crate::{
     semantic::SemanticDocument,
     symbols::{Definition, DefinitionKind},
     syntax::{FileId, ParsedFile, SourceSpan, SourceText},
-    workspace::{effective_roots, file_url_to_path, is_workspace_luma_uri},
+    workspace::{effective_roots, file_url_to_path, is_workspace_lyma_uri},
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -26,7 +26,7 @@ pub struct ReferencesRequest<'a> {
     pub offset: usize,
     pub include_declaration: bool,
     pub workspace_folders: &'a [WorkspaceFolder],
-    pub config: &'a LumalsConfig,
+    pub config: &'a LymalsConfig,
     pub open_documents: &'a [DocumentSnapshot],
 }
 
@@ -35,7 +35,7 @@ pub fn find_references(request: ReferencesRequest<'_>) -> Vec<Location> {
     let source = parsed.source.clone();
     let file = match &parsed.file {
         ParsedFile::Fallback(file) => &file.ast,
-        #[cfg(feature = "upstream-luma")]
+        #[cfg(feature = "upstream-lyma")]
         ParsedFile::Upstream(_) => return Vec::new(),
     };
     let semantic = SemanticDocument::from_ast(file);
@@ -137,7 +137,7 @@ impl WorkspaceCorpus {
                     let Ok(uri) = Url::from_file_path(path) else {
                         return;
                     };
-                    if !is_workspace_luma_uri(&uri, request.workspace_folders, request.config) {
+                    if !is_workspace_lyma_uri(&uri, request.workspace_folders, request.config) {
                         return;
                     }
                     let Ok(metadata) = fs::metadata(path) else {
@@ -767,7 +767,7 @@ fn file_entry_from_text(uri: Url, text: String, file_id: FileId) -> WorkspaceFil
     let parsed = parser::parse_fallback(file_id, uri.as_str(), &text);
     let file = match parsed.file {
         ParsedFile::Fallback(file) => file,
-        #[cfg(feature = "upstream-luma")]
+        #[cfg(feature = "upstream-lyma")]
         ParsedFile::Upstream(_) => unreachable!(),
     };
     let semantic = SemanticDocument::from_ast(&file.ast);
@@ -940,7 +940,7 @@ fn walk_workspace(root: &Path, visit: &mut dyn FnMut(&Path)) {
         };
         if file_type.is_dir() {
             walk_workspace(&path, visit);
-        } else if file_type.is_file() && path.extension().is_some_and(|ext| ext == "luma") {
+        } else if file_type.is_file() && path.extension().is_some_and(|ext| ext == "lyma") {
             visit(&path);
         }
     }
