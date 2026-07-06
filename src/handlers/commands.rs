@@ -82,6 +82,7 @@ impl LumaLanguageServer {
         Ok(json!({
             "command": commands::SHOW_SYNTAX_TREE,
             "uri": uri,
+            "parseOnly": true,
             "backend": format!("{:?}", parsed.backend),
             "tree": tree,
         }))
@@ -162,22 +163,25 @@ impl LumaLanguageServer {
         }
 
         let snapshot = self.state.snapshot();
-        if !workspace::is_workspace_luma_uri(uri, &snapshot.workspace.folders, &snapshot.config) {
-            return Err(Error::invalid_params(
-                "workspace file must stay within configured roots and end with .luma",
-            ));
-        }
+        let validated = workspace::validate_workspace_luma_file_uri(
+            uri,
+            &snapshot.workspace.folders,
+            &snapshot.config,
+        )
+        .map_err(|_| {
+            Error::invalid_params(
+                "workspace file must stay within configured roots, resolve to a regular .luma file, and end with .luma",
+            )
+        })?;
 
-        let path = workspace::file_url_to_path(uri)
-            .ok_or_else(|| Error::invalid_params("workspace file URI must use the file scheme"))?;
-        let metadata = fs::metadata(&path)
+        let metadata = fs::metadata(&validated.canonical_path)
             .map_err(|_| Error::invalid_params("workspace file could not be read"))?;
         if metadata.len() > u64::from(snapshot.config.max_indexed_file_bytes) {
             return Err(Error::invalid_params(
                 "workspace file exceeds the configured size limit",
             ));
         }
-        let text = fs::read_to_string(path)
+        let text = fs::read_to_string(validated.canonical_path)
             .map_err(|_| Error::invalid_params("workspace file could not be read"))?;
         Ok((FileId(0), text))
     }

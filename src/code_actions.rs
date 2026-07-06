@@ -5,7 +5,16 @@ use tower_lsp::lsp_types::{
     Diagnostic as LspDiagnostic, NumberOrString, Range, TextEdit as LspTextEdit, WorkspaceEdit,
 };
 
-use crate::{document::Document, state::SessionSnapshot, syntax::SourceSpan};
+use crate::{
+    ast::{
+        AstFile, Directive, DocumentItem, Mapping, MappingEntry, Node, Scalar, ScalarKind,
+        Sequence, TagNode,
+    },
+    document::Document,
+    parser,
+    state::SessionSnapshot,
+    syntax::{ParsedFile, SourceSpan, SourceText},
+};
 
 const KNOWN_DIRECTIVES: &[&str] = &[
     "@luma", "@profile", "@schema", "@import", "@include", "@use", "@lua", "@meta",
@@ -26,6 +35,16 @@ pub fn collect(request: CodeActionRequest<'_>) -> Vec<CodeActionOrCommand> {
     let mut seen = BTreeSet::new();
     let text = request.document.text();
     let lines = split_lines(&text);
+    let parsed = parser::parse_fallback(
+        request.document.file_id(),
+        request.document.uri().as_str(),
+        &text,
+    );
+    let syntax = match &parsed.file {
+        ParsedFile::Fallback(file) => Some(IndexedSyntax::new(&file.ast, &parsed.source)),
+        #[cfg(feature = "upstream-luma")]
+        ParsedFile::Upstream(_) => None,
+    };
 
     for diagnostic in &request.context.diagnostics {
         match diagnostic_code(diagnostic) {
@@ -33,12 +52,12 @@ pub fn collect(request: CodeActionRequest<'_>) -> Vec<CodeActionOrCommand> {
                 push_action(
                     &mut actions,
                     &mut seen,
-                    duplicate_remove_action(request.document, &lines, diagnostic),
+                    duplicate_remove_action(request.document, &lines, syntax.as_ref(), diagnostic),
                 );
                 push_action(
                     &mut actions,
                     &mut seen,
-                    duplicate_rename_action(request.document, &lines, diagnostic, &text),
+                    duplicate_rename_action(request.document, &lines, syntax.as_ref(), diagnostic),
                 );
             }
             Some("L003") => push_action(
@@ -49,7 +68,7 @@ pub fn collect(request: CodeActionRequest<'_>) -> Vec<CodeActionOrCommand> {
             Some("L009") => push_action(
                 &mut actions,
                 &mut seen,
-                normalize_directive_action(request.document, &lines, diagnostic),
+                normalize_directive_action(request.document, syntax.as_ref(), diagnostic),
             ),
             _ => {}
         }
@@ -58,32 +77,34 @@ pub fn collect(request: CodeActionRequest<'_>) -> Vec<CodeActionOrCommand> {
     push_action(
         &mut actions,
         &mut seen,
-        quote_ambiguous_scalar_action(request.document, &lines, request.range),
+        quote_ambiguous_scalar_action(request.document, syntax.as_ref(), request.range),
     );
-    for action in selection_duplicate_actions(request.document, &lines, request.range) {
+    for action in
+        selection_duplicate_actions(request.document, &lines, syntax.as_ref(), request.range)
+    {
         push_action(&mut actions, &mut seen, Some(action));
     }
     push_action(
         &mut actions,
         &mut seen,
-        selection_normalize_directive_action(request.document, &lines, request.range),
+        selection_normalize_directive_action(request.document, syntax.as_ref(), request.range),
     );
     push_action(
         &mut actions,
         &mut seen,
-        empty_value_to_null_action(request.document, &lines, request.range),
+        empty_value_to_null_action(request.document, &lines, syntax.as_ref(), request.range),
     );
     push_action(
         &mut actions,
         &mut seen,
-        insert_luma_header_action(request.document, &lines),
+        insert_luma_header_action(request.document, syntax.as_ref()),
     );
 
     if request.snapshot.config.imports.enabled {
         push_action(
             &mut actions,
             &mut seen,
-            organize_directives_action(request.document, &lines),
+            organize_directives_action(request.document, &lines, syntax.as_ref()),
         );
     }
 
@@ -124,10 +145,12 @@ fn tabs_to_spaces_action(document: &Document, diagnostic: &LspDiagnostic) -> Opt
 fn duplicate_remove_action(
     document: &Document,
     lines: &[Line<'_>],
+    syntax: Option<&IndexedSyntax<'_>>,
     diagnostic: &LspDiagnostic,
 ) -> Option<CodeAction> {
-    let line = lines.get(diagnostic.range.start.line as usize)?;
-    let key = mapping_key(line.text.trim())?;
+    let entry = matching_mapping_entry(document, syntax?, diagnostic.range)?;
+    let line = line_for_offset(lines, entry.key_span.start)?;
+    let key = entry.key.as_str();
     let delete_span = SourceSpan::new(document.file_id(), line.start, line.end_with_newline);
 
     Some(code_action(
@@ -142,22 +165,13 @@ fn duplicate_remove_action(
 
 fn duplicate_rename_action(
     document: &Document,
-    lines: &[Line<'_>],
+    _lines: &[Line<'_>],
+    syntax: Option<&IndexedSyntax<'_>>,
     diagnostic: &LspDiagnostic,
-    text: &str,
 ) -> Option<CodeAction> {
-    let line = lines.get(diagnostic.range.start.line as usize)?;
-    let trimmed = line.text.trim();
-    let key = mapping_key(trimmed)?;
-    let colon = line.text.find(':')?;
-    let key_start_in_line = line.text.find(key)?;
-    let key_span = SourceSpan::new(
-        document.file_id(),
-        line.start + key_start_in_line,
-        line.start + colon,
-    );
-    let new_name = next_available_key_name(text, key);
-    if new_name == key {
+    let entry = matching_mapping_entry(document, syntax?, diagnostic.range)?;
+    let new_name = next_available_key_name(syntax?, &entry.key);
+    if new_name == entry.key {
         return None;
     }
 
@@ -166,25 +180,22 @@ fn duplicate_rename_action(
         CodeActionKind::QUICKFIX,
         vec![diagnostic.clone()],
         document,
-        vec![edit(document, key_span, new_name)?],
+        vec![edit(document, entry.key_span, new_name)?],
         false,
     ))
 }
 
 fn normalize_directive_action(
     document: &Document,
-    lines: &[Line<'_>],
+    syntax: Option<&IndexedSyntax<'_>>,
     diagnostic: &LspDiagnostic,
 ) -> Option<CodeAction> {
-    let line = lines.get(diagnostic.range.start.line as usize)?;
-    let trimmed = line.text.trim_start();
-    let name = trimmed.split_whitespace().next()?;
-    let replacement = best_directive_suggestion(name)?;
-    if replacement == name {
+    let directive = matching_directive(document, syntax?, diagnostic.range)?;
+    let replacement = best_directive_suggestion(&directive.name)?;
+    if replacement == directive.name {
         return None;
     }
-    let start = line.start + line.leading_ws;
-    let span = SourceSpan::new(document.file_id(), start, start + name.len());
+    let span = directive_name_span(directive, syntax?.source)?;
 
     Some(code_action(
         format!("Normalize directive to `{replacement}`"),
@@ -198,19 +209,16 @@ fn normalize_directive_action(
 
 fn quote_ambiguous_scalar_action(
     document: &Document,
-    lines: &[Line<'_>],
+    syntax: Option<&IndexedSyntax<'_>>,
     range: Range,
 ) -> Option<CodeAction> {
     let selection = document.range_to_span(range).ok()?;
 
-    for line in lines {
-        if !spans_overlap(
-            selection,
-            SourceSpan::new(document.file_id(), line.start, line.end),
-        ) {
+    for scalar in syntax?.scalars.iter().copied() {
+        if scalar.kind != ScalarKind::Plain || !spans_overlap(selection, scalar.span) {
             continue;
         }
-        let (value, span) = scalar_span(document.file_id(), line)?;
+        let value = scalar.text.trim();
         if !AMBIGUOUS_SCALARS.contains(&value) {
             continue;
         }
@@ -219,7 +227,7 @@ fn quote_ambiguous_scalar_action(
             CodeActionKind::QUICKFIX,
             Vec::new(),
             document,
-            vec![edit(document, span, format!("\"{value}\""))?],
+            vec![edit(document, scalar.span, format!("\"{value}\""))?],
             false,
         ));
     }
@@ -230,6 +238,7 @@ fn quote_ambiguous_scalar_action(
 fn selection_duplicate_actions(
     document: &Document,
     lines: &[Line<'_>],
+    syntax: Option<&IndexedSyntax<'_>>,
     range: Range,
 ) -> Vec<CodeAction> {
     let Ok(selection) = document.range_to_span(range) else {
@@ -238,16 +247,18 @@ fn selection_duplicate_actions(
 
     let mut actions = Vec::new();
     let mut seen_keys = BTreeSet::new();
-    let text = document.text();
 
-    for line in lines {
-        let trimmed = line.text.trim();
-        let Some(key) = mapping_key(trimmed) else {
-            continue;
-        };
+    for entry in syntax
+        .into_iter()
+        .flat_map(|syntax| syntax.mapping_entries.iter().copied())
+    {
+        let key = entry.key.as_str();
         if seen_keys.insert(key.to_string()) {
             continue;
         }
+        let Some(line) = line_for_offset(lines, entry.key_span.start) else {
+            continue;
+        };
         let line_span = SourceSpan::new(document.file_id(), line.start, line.end);
         if !spans_overlap(selection, line_span) {
             continue;
@@ -265,25 +276,19 @@ fn selection_duplicate_actions(
             ));
         }
 
-        if let Some(colon) = line.text.find(':')
-            && let Some(key_start_in_line) = line.text.find(key)
-        {
-            let key_span = SourceSpan::new(
-                document.file_id(),
-                line.start + key_start_in_line,
-                line.start + colon,
-            );
-            let new_name = next_available_key_name(&text, key);
-            if let Some(rename_edit) = edit(document, key_span, new_name.clone()) {
-                actions.push(code_action(
-                    format!("Rename duplicate key to `{new_name}`"),
-                    CodeActionKind::QUICKFIX,
-                    Vec::new(),
-                    document,
-                    vec![rename_edit],
-                    false,
-                ));
-            }
+        let Some(syntax) = syntax else {
+            continue;
+        };
+        let new_name = next_available_key_name(syntax, key);
+        if let Some(rename_edit) = edit(document, entry.key_span, new_name.clone()) {
+            actions.push(code_action(
+                format!("Rename duplicate key to `{new_name}`"),
+                CodeActionKind::QUICKFIX,
+                Vec::new(),
+                document,
+                vec![rename_edit],
+                false,
+            ));
         }
     }
 
@@ -292,30 +297,22 @@ fn selection_duplicate_actions(
 
 fn selection_normalize_directive_action(
     document: &Document,
-    lines: &[Line<'_>],
+    syntax: Option<&IndexedSyntax<'_>>,
     range: Range,
 ) -> Option<CodeAction> {
     let selection = document.range_to_span(range).ok()?;
 
-    for line in lines {
-        let line_span = SourceSpan::new(document.file_id(), line.start, line.end);
-        if !spans_overlap(selection, line_span) {
+    for directive in syntax?.directives.iter().copied() {
+        if !spans_overlap(selection, directive.span)
+            || KNOWN_DIRECTIVES.contains(&directive.name.as_str())
+        {
             continue;
         }
-        let trimmed = line.text.trim_start();
-        if !trimmed.starts_with('@') {
+        let replacement = best_directive_suggestion(&directive.name)?;
+        if replacement == directive.name {
             continue;
         }
-        let name = trimmed.split_whitespace().next()?;
-        if KNOWN_DIRECTIVES.contains(&name) {
-            continue;
-        }
-        let replacement = best_directive_suggestion(name)?;
-        if replacement == name {
-            continue;
-        }
-        let start = line.start + line.leading_ws;
-        let span = SourceSpan::new(document.file_id(), start, start + name.len());
+        let span = directive_name_span(directive, syntax?.source)?;
         return Some(code_action(
             format!("Normalize directive to `{replacement}`"),
             CodeActionKind::QUICKFIX,
@@ -332,23 +329,23 @@ fn selection_normalize_directive_action(
 fn empty_value_to_null_action(
     document: &Document,
     lines: &[Line<'_>],
+    syntax: Option<&IndexedSyntax<'_>>,
     range: Range,
 ) -> Option<CodeAction> {
     let selection = document.range_to_span(range).ok()?;
 
-    for line in lines {
-        if !spans_overlap(
-            selection,
-            SourceSpan::new(document.file_id(), line.start, line.end),
-        ) {
+    for entry in syntax?.mapping_entries.iter().copied() {
+        let Some(line) = line_for_offset(lines, entry.key_span.start) else {
+            continue;
+        };
+        let line_span = SourceSpan::new(document.file_id(), line.start, line.end);
+        if entry.value.is_some() || !spans_overlap(selection, line_span) {
             continue;
         }
-        let trimmed = line.text.trim();
-        if trimmed.starts_with('@') || trimmed.starts_with('#') || trimmed.starts_with('-') {
+        let Some((_, value)) = line.text.trim().split_once(':') else {
             continue;
-        }
-        let (key, value) = trimmed.split_once(':')?;
-        if key.trim().is_empty() || !value.trim().is_empty() {
+        };
+        if !value.trim().is_empty() {
             continue;
         }
 
@@ -358,7 +355,7 @@ fn empty_value_to_null_action(
             line.start + line.text.len(),
         );
         return Some(code_action(
-            format!("Convert empty value for `{}` to null", key.trim()),
+            format!("Convert empty value for `{}` to null", entry.key),
             CodeActionKind::QUICKFIX,
             Vec::new(),
             document,
@@ -370,10 +367,14 @@ fn empty_value_to_null_action(
     None
 }
 
-fn insert_luma_header_action(document: &Document, lines: &[Line<'_>]) -> Option<CodeAction> {
-    if lines
+fn insert_luma_header_action(
+    document: &Document,
+    syntax: Option<&IndexedSyntax<'_>>,
+) -> Option<CodeAction> {
+    if syntax?
+        .directives
         .iter()
-        .any(|line| line.text.trim_start().starts_with("@luma ") || line.text.trim() == "@luma")
+        .any(|directive| directive.name == "@luma")
     {
         return None;
     }
@@ -393,17 +394,21 @@ fn insert_luma_header_action(document: &Document, lines: &[Line<'_>]) -> Option<
     ))
 }
 
-fn organize_directives_action(document: &Document, lines: &[Line<'_>]) -> Option<CodeAction> {
-    let start = lines
-        .iter()
-        .position(|line| line.text.trim_start().starts_with('@'))?;
-    let mut end = start;
-    while end < lines.len() && lines[end].text.trim_start().starts_with('@') {
-        end += 1;
-    }
-    if end - start < 2 {
+fn organize_directives_action(
+    document: &Document,
+    lines: &[Line<'_>],
+    syntax: Option<&IndexedSyntax<'_>>,
+) -> Option<CodeAction> {
+    let directives = leading_directives(syntax?)?;
+    if directives.len() < 2 {
         return None;
     }
+    let start_line = line_for_offset(lines, directives.first()?.span.start)?;
+    let end_line = line_for_offset(lines, directives.last()?.span.start)?;
+    let start = lines
+        .iter()
+        .position(|line| line.start == start_line.start)?;
+    let end = lines.iter().position(|line| line.start == end_line.start)? + 1;
 
     let mut sorted = lines[start..end]
         .iter()
@@ -481,20 +486,14 @@ fn diagnostic_code(diagnostic: &LspDiagnostic) -> Option<&str> {
     }
 }
 
-fn mapping_key(trimmed: &str) -> Option<&str> {
-    let (key, _) = trimmed.split_once(':')?;
-    let key = key.trim();
-    (!key.is_empty()).then_some(key)
-}
-
-fn next_available_key_name(text: &str, key: &str) -> String {
+fn next_available_key_name(syntax: &IndexedSyntax<'_>, key: &str) -> String {
     let mut suffix = 2usize;
     loop {
         let candidate = format!("{key}_{suffix}");
-        let exists = split_lines(text)
+        let exists = syntax
+            .mapping_entries
             .iter()
-            .filter_map(|line| mapping_key(line.text.trim()))
-            .any(|existing| existing == candidate);
+            .any(|entry| entry.key == candidate);
         if !exists {
             return candidate;
         }
@@ -545,47 +544,72 @@ fn levenshtein(left: &str, right: &str) -> usize {
     *prev.last().unwrap_or(&0)
 }
 
-fn scalar_span<'a>(
-    file_id: crate::syntax::FileId,
-    line: &'a Line<'a>,
-) -> Option<(&'a str, SourceSpan)> {
-    let trimmed = line.text.trim_start();
-    let (value, offset) = if trimmed.starts_with('@') {
-        let name = trimmed.split_whitespace().next()?;
-        let rest = trimmed[name.len()..].trim_start();
-        (rest, line.text.find(rest)?)
-    } else if let Some(rest) = trimmed.strip_prefix("let ") {
-        let equals = rest.find('=')? + 4;
-        let value = line.text[equals + 1..].trim_start();
-        (value, line.text.find(value)?)
-    } else if let Some((_, value)) = line.text.split_once(':') {
-        let value = value.trim_start();
-        (value, line.text.find(value)?)
-    } else if let Some(rest) = trimmed.strip_prefix('-') {
-        let value = rest.trim_start();
-        (value, line.text.find(value)?)
-    } else {
-        (trimmed, line.leading_ws)
-    };
-
-    if value.is_empty()
-        || value.starts_with('"')
-        || value.starts_with('\'')
-        || value.contains(char::is_whitespace)
-    {
-        return None;
-    }
-
-    let span = SourceSpan::new(
-        file_id,
-        line.start + offset,
-        line.start + offset + value.len(),
-    );
-    Some((value, span))
-}
-
 fn spans_overlap(left: SourceSpan, right: SourceSpan) -> bool {
     left.start <= right.end && right.start <= left.end
+}
+
+fn matching_mapping_entry<'a>(
+    document: &Document,
+    syntax: &'a IndexedSyntax<'a>,
+    range: Range,
+) -> Option<&'a MappingEntry> {
+    let span = document.range_to_span(range).ok()?;
+    syntax
+        .mapping_entries
+        .iter()
+        .copied()
+        .find(|entry| spans_overlap(entry.key_span, span))
+        .or_else(|| {
+            syntax
+                .mapping_entries
+                .iter()
+                .copied()
+                .find(|entry| spans_overlap(entry.span, span))
+        })
+}
+
+fn matching_directive<'a>(
+    document: &Document,
+    syntax: &'a IndexedSyntax<'a>,
+    range: Range,
+) -> Option<&'a Directive> {
+    let span = document.range_to_span(range).ok()?;
+    syntax
+        .directives
+        .iter()
+        .copied()
+        .find(|directive| spans_overlap(directive.span, span))
+}
+
+fn directive_name_span(directive: &Directive, source: &SourceText) -> Option<SourceSpan> {
+    let text = source.slice(directive.span)?;
+    let local_start = text.find(&directive.name)?;
+    Some(SourceSpan::new(
+        directive.span.file_id,
+        directive.span.start + local_start,
+        directive.span.start + local_start + directive.name.len(),
+    ))
+}
+
+fn leading_directives<'a>(syntax: &'a IndexedSyntax<'a>) -> Option<Vec<&'a Directive>> {
+    let document = syntax.file.documents.first()?;
+    let directives = document
+        .items
+        .iter()
+        .take_while(|item| matches!(item, DocumentItem::Directive(_)))
+        .filter_map(|item| match item {
+            DocumentItem::Directive(directive) => Some(directive),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    (!directives.is_empty()).then_some(directives)
+}
+
+fn line_for_offset<'a>(lines: &'a [Line<'a>], offset: usize) -> Option<&'a Line<'a>> {
+    lines.iter().find(|line| {
+        offset >= line.start
+            && (offset < line.end_with_newline || (offset == line.end && !line.has_newline))
+    })
 }
 
 fn directive_sort_key(line: &str) -> (usize, String) {
@@ -611,9 +635,73 @@ struct Line<'a> {
     start: usize,
     end: usize,
     end_with_newline: usize,
-    leading_ws: usize,
     text: &'a str,
     has_newline: bool,
+}
+
+struct IndexedSyntax<'a> {
+    file: &'a AstFile,
+    source: &'a SourceText,
+    directives: Vec<&'a Directive>,
+    mapping_entries: Vec<&'a MappingEntry>,
+    scalars: Vec<&'a Scalar>,
+}
+
+impl<'a> IndexedSyntax<'a> {
+    fn new(file: &'a AstFile, source: &'a SourceText) -> Self {
+        let mut syntax = Self {
+            file,
+            source,
+            directives: Vec::new(),
+            mapping_entries: Vec::new(),
+            scalars: Vec::new(),
+        };
+
+        for document in &file.documents {
+            for item in &document.items {
+                match item {
+                    DocumentItem::Directive(directive) => syntax.directives.push(directive),
+                    DocumentItem::Node(node) => syntax.visit_node(node),
+                    DocumentItem::Comment(_) | DocumentItem::Let(_) => {}
+                }
+            }
+        }
+
+        syntax
+    }
+
+    fn visit_node(&mut self, node: &'a Node) {
+        match node {
+            Node::Mapping(mapping) => self.visit_mapping(mapping),
+            Node::Sequence(sequence) => self.visit_sequence(sequence),
+            Node::Scalar(scalar) => self.scalars.push(scalar),
+            Node::Tag(tag) => self.visit_tag(tag),
+            Node::Spread(_) | Node::Conditional(_) | Node::Loop(_) | Node::Error(_) => {}
+        }
+    }
+
+    fn visit_mapping(&mut self, mapping: &'a Mapping) {
+        for entry in &mapping.entries {
+            self.mapping_entries.push(entry);
+            if let Some(value) = &entry.value {
+                self.visit_node(value);
+            }
+        }
+    }
+
+    fn visit_sequence(&mut self, sequence: &'a Sequence) {
+        for item in &sequence.items {
+            if let Some(value) = &item.value {
+                self.visit_node(value);
+            }
+        }
+    }
+
+    fn visit_tag(&mut self, tag: &'a TagNode) {
+        if let Some(value) = &tag.value {
+            self.visit_node(value);
+        }
+    }
 }
 
 fn split_lines(text: &str) -> Vec<Line<'_>> {
@@ -622,7 +710,6 @@ fn split_lines(text: &str) -> Vec<Line<'_>> {
             start: 0,
             end: 0,
             end_with_newline: 0,
-            leading_ws: 0,
             text: "",
             has_newline: false,
         }];
@@ -634,16 +721,11 @@ fn split_lines(text: &str) -> Vec<Line<'_>> {
         let has_newline = segment.ends_with('\n');
         let body = segment.strip_suffix('\n').unwrap_or(segment);
         let body = body.strip_suffix('\r').unwrap_or(body);
-        let leading_ws = body
-            .char_indices()
-            .find_map(|(offset, ch)| (ch != ' ' && ch != '\t').then_some(offset))
-            .unwrap_or(body.len());
         let end_with_newline = start + segment.len();
         lines.push(Line {
             start,
             end: start + body.len(),
             end_with_newline,
-            leading_ws,
             text: body,
             has_newline,
         });

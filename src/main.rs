@@ -8,6 +8,8 @@ use std::{
 };
 
 use clap::Parser;
+use tokio::runtime::Builder;
+use tower_lsp::Server;
 
 use crate::cli::Cli;
 
@@ -37,14 +39,16 @@ where
         }
     };
 
-    if cli.version {
-        let _ = writeln!(stdout, "{}", lumals::version_banner());
-        return ExitCode::SUCCESS;
-    }
-
-    if cli.print_config_schema {
-        let _ = writeln!(stdout, "{}", lumals::config::config_schema_json());
-        return ExitCode::SUCCESS;
+    match command_mode(&cli) {
+        CommandMode::Version => {
+            let _ = writeln!(stdout, "{}", lumals::version_banner());
+            return ExitCode::SUCCESS;
+        }
+        CommandMode::PrintConfigSchema => {
+            let _ = writeln!(stdout, "{}", lumals::config::config_schema_json());
+            return ExitCode::SUCCESS;
+        }
+        CommandMode::Stdio => {}
     }
 
     logging::install_panic_hook(cli.log_file.clone());
@@ -57,13 +61,48 @@ where
     run_stdio(cli, stdout, stderr)
 }
 
-fn run_stdio(_cli: Cli, _stdout: &mut dyn Write, _stderr: &mut dyn Write) -> ExitCode {
+fn run_stdio(_cli: Cli, _stdout: &mut dyn Write, stderr: &mut dyn Write) -> ExitCode {
+    let runtime = match Builder::new_current_thread().enable_all().build() {
+        Ok(runtime) => runtime,
+        Err(error) => {
+            let _ = writeln!(stderr, "failed to start async runtime: {error:#}");
+            return ExitCode::FAILURE;
+        }
+    };
+
+    runtime.block_on(async {
+        let stdin = tokio::io::stdin();
+        let stdout = tokio::io::stdout();
+        let (service, socket) = lumals::server::service();
+        Server::new(stdin, stdout, socket).serve(service).await;
+    });
+
     ExitCode::SUCCESS
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CommandMode {
+    Stdio,
+    Version,
+    PrintConfigSchema,
+}
+
+fn command_mode(cli: &Cli) -> CommandMode {
+    if cli.version {
+        CommandMode::Version
+    } else if cli.print_config_schema {
+        CommandMode::PrintConfigSchema
+    } else {
+        CommandMode::Stdio
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::run;
+    use clap::Parser;
+
+    use super::{CommandMode, command_mode, run};
+    use crate::cli::Cli;
 
     #[test]
     fn version_flag_prints_banner() {
@@ -98,23 +137,13 @@ mod tests {
 
     #[test]
     fn default_stdio_mode_does_not_write_to_stdout() {
-        let mut stdout = Vec::new();
-        let mut stderr = Vec::new();
-
-        let code = run(["lumals"], &mut stdout, &mut stderr);
-
-        assert_eq!(code, std::process::ExitCode::SUCCESS);
-        assert!(stdout.is_empty());
+        let cli = Cli::parse_from(["lumals"]);
+        assert_eq!(command_mode(&cli), CommandMode::Stdio);
     }
 
     #[test]
     fn explicit_stdio_flag_is_a_quiet_synonym() {
-        let mut stdout = Vec::new();
-        let mut stderr = Vec::new();
-
-        let code = run(["lumals", "--stdio"], &mut stdout, &mut stderr);
-
-        assert_eq!(code, std::process::ExitCode::SUCCESS);
-        assert!(stdout.is_empty());
+        let cli = Cli::parse_from(["lumals", "--stdio"]);
+        assert_eq!(command_mode(&cli), CommandMode::Stdio);
     }
 }

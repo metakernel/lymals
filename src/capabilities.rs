@@ -88,29 +88,8 @@ pub fn supports_workspace_configuration(client_capabilities: &ClientCapabilities
         .unwrap_or(false)
 }
 
-fn negotiate_position_encoding(client_capabilities: &ClientCapabilities) -> PositionEncodingKind {
-    let encodings = client_capabilities
-        .general
-        .as_ref()
-        .and_then(|general| general.position_encodings.as_ref());
-
-    match encodings {
-        Some(encodings)
-            if encodings
-                .iter()
-                .any(|encoding| encoding == &PositionEncodingKind::UTF8) =>
-        {
-            PositionEncodingKind::UTF8
-        }
-        Some(encodings)
-            if encodings
-                .iter()
-                .any(|encoding| encoding == &PositionEncodingKind::UTF32) =>
-        {
-            PositionEncodingKind::UTF32
-        }
-        _ => PositionEncodingKind::UTF16,
-    }
+fn negotiate_position_encoding(_: &ClientCapabilities) -> PositionEncodingKind {
+    PositionEncodingKind::UTF16
 }
 
 fn negotiate_workspace_capabilities(
@@ -139,10 +118,11 @@ mod tests {
     use super::{negotiate, supports_workspace_configuration};
 
     #[test]
-    fn prefers_utf8_when_client_supports_it() {
+    fn always_advertises_utf16_even_when_client_supports_utf8_and_utf32() {
         let capabilities = ClientCapabilities {
             general: Some(GeneralClientCapabilities {
                 position_encodings: Some(vec![
+                    PositionEncodingKind::UTF32,
                     PositionEncodingKind::UTF16,
                     PositionEncodingKind::UTF8,
                 ]),
@@ -155,7 +135,7 @@ mod tests {
 
         assert_eq!(
             negotiated.position_encoding,
-            Some(PositionEncodingKind::UTF8)
+            Some(PositionEncodingKind::UTF16)
         );
     }
 
