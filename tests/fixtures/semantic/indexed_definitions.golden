@@ -1,16 +1,16 @@
 definitions:
 - DocumentRoot: document1 @ document[1] [0..3]
-- Directive: @luma @ document[1].@luma [0..10]
+- Directive: @lyma @ document[1].@lyma [0..10]
   detail: 1
 - Directive: @import @ document[1].@import [11..40]
-  detail: "./shared.luma" as shared
-- Import: ./shared.luma @ document[1].@import(./shared.luma) [11..40]
+  detail: "./shared.lyma" as shared
+- Import: ./shared.lyma @ document[1].@import(./shared.lyma) [11..40]
   detail: @import
 - Alias: shared @ document[1].alias(shared) [11..40]
-  detail: ./shared.luma
+  detail: ./shared.lyma
 - Directive: @include @ document[1].@include [41..70]
-  detail: partials/base.luma
-- Import: partials/base.luma @ document[1].@import(partials/base.luma) [41..70]
+  detail: partials/base.lyma
+- Import: partials/base.lyma @ document[1].@import(partials/base.lyma) [41..70]
   detail: @include
 - Let: region @ document[1].$region [71..95]
   detail: 83..95
@@ -23,12 +23,12 @@ definitions:
 - Key: retries @ document[1].config.retries [228..235]
 symbols:
 - Document: document1
-- Directive: @luma
+- Directive: @lyma
 - Directive: @import
-- Directive: ./shared.luma
+- Directive: ./shared.lyma
 - Variable: shared
 - Directive: @include
-- Directive: partials/base.luma
+- Directive: partials/base.lyma
 - Variable: region
 - MappingKey: services
 - MappingKey: name

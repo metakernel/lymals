@@ -136,6 +136,46 @@ mod tests {
     }
 
     #[test]
+    fn version_flag_exits_before_logging_initialization() {
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+
+        let code = run(
+            ["lymals", "--version", "--log-file", "?:\\invalid\\lymals.log"],
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(code, std::process::ExitCode::SUCCESS);
+        assert_eq!(
+            String::from_utf8(stdout).unwrap(),
+            format!("{}\n", lymals::version_banner())
+        );
+        assert!(stderr.is_empty());
+    }
+
+    #[test]
+    fn config_schema_flag_exits_before_logging_initialization() {
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+
+        let code = run(
+            [
+                "lymals",
+                "--print-config-schema",
+                "--log-file",
+                "?:\\invalid\\lymals.log",
+            ],
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(code, std::process::ExitCode::SUCCESS);
+        assert!(String::from_utf8(stdout).unwrap().contains("\"$schema\""));
+        assert!(stderr.is_empty());
+    }
+
+    #[test]
     fn default_stdio_mode_does_not_write_to_stdout() {
         let cli = Cli::parse_from(["lymals"]);
         assert_eq!(command_mode(&cli), CommandMode::Stdio);
@@ -145,5 +185,17 @@ mod tests {
     fn explicit_stdio_flag_is_a_quiet_synonym() {
         let cli = Cli::parse_from(["lymals", "--stdio"]);
         assert_eq!(command_mode(&cli), CommandMode::Stdio);
+    }
+
+    #[test]
+    fn version_takes_priority_over_stdio_mode() {
+        let cli = Cli::parse_from(["lymals", "--stdio", "--version"]);
+        assert_eq!(command_mode(&cli), CommandMode::Version);
+    }
+
+    #[test]
+    fn config_schema_takes_priority_over_stdio_mode() {
+        let cli = Cli::parse_from(["lymals", "--stdio", "--print-config-schema"]);
+        assert_eq!(command_mode(&cli), CommandMode::PrintConfigSchema);
     }
 }

@@ -238,7 +238,15 @@ async fn binary_stdio_starts_real_lsp_server_without_stdout_noise() {
     drop(writer);
 
     let status = child.wait().expect("failed to wait for lymals child");
+    let mut stderr = String::new();
+    child
+        .stderr
+        .take()
+        .expect("missing stderr")
+        .read_to_string(&mut stderr)
+        .expect("failed to read stderr");
     assert!(status.success(), "lymals child failed: {status}");
+    assert!(stderr.is_empty(), "unexpected stderr output: {stderr}");
 }
 
 fn send_message_blocking<W>(stream: &mut W, value: &Value)

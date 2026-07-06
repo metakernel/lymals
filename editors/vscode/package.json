@@ -1,0 +1,390 @@
+{
+  "name": "lymals-vscode",
+  "displayName": "Lyma",
+  "description": "VS Code language support for Lyma via the lymals language server.",
+  "version": "0.0.1",
+  "publisher": "local-dev",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "lyma",
+    "language",
+    "lsp"
+  ],
+  "activationEvents": [
+    "onLanguage:lyma",
+    "workspaceContains:**/*.lyma",
+    "onCommand:lymals.restartLanguageServer",
+    "onCommand:lymals.showOutput",
+    "onCommand:lymals.vscode.restartIndex",
+    "onCommand:lymals.vscode.showSyntaxTree",
+    "onCommand:lymals.vscode.showConfig",
+    "onCommand:lymals.vscode.formatWorkspaceFilePreview",
+    "onCommand:lymals.vscode.explainDiagnostic"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "lyma",
+        "aliases": [
+          "Lyma",
+          "lyma"
+        ],
+        "extensions": [
+          ".lyma"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "lyma",
+        "scopeName": "source.lyma",
+        "path": "./syntaxes/lyma.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "lymals.restartLanguageServer",
+        "title": "Lymals: Restart Language Server"
+      },
+      {
+        "command": "lymals.showOutput",
+        "title": "Lymals: Show Output"
+      },
+      {
+        "command": "lymals.vscode.restartIndex",
+        "title": "Lymals: Restart Index"
+      },
+      {
+        "command": "lymals.vscode.showSyntaxTree",
+        "title": "Lymals: Show Syntax Tree"
+      },
+      {
+        "command": "lymals.vscode.showConfig",
+        "title": "Lymals: Show Config"
+      },
+      {
+        "command": "lymals.vscode.formatWorkspaceFilePreview",
+        "title": "Lymals: Format Workspace File Preview"
+      },
+      {
+        "command": "lymals.vscode.explainDiagnostic",
+        "title": "Lymals: Explain Diagnostic"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "lymals.restartLanguageServer"
+        },
+        {
+          "command": "lymals.showOutput"
+        },
+        {
+          "command": "lymals.vscode.restartIndex"
+        },
+        {
+          "command": "lymals.vscode.showConfig"
+        },
+        {
+          "command": "lymals.vscode.showSyntaxTree",
+          "when": "editorLangId == lyma"
+        },
+        {
+          "command": "lymals.vscode.formatWorkspaceFilePreview",
+          "when": "editorLangId == lyma"
+        },
+        {
+          "command": "lymals.vscode.explainDiagnostic",
+          "when": "editorLangId == lyma"
+        }
+      ]
+    },
+    "configurationDefaults": {
+      "[lyma]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+      }
+    },
+    "configuration": {
+      "title": "Lyma",
+      "properties": {
+        "lymalsExtension.server.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Absolute or workspace-relative path to the lymals server executable. User/global values are used automatically; workspace values require a trusted workspace and an approval prompt. Leave empty to fall back to LYMALS_SERVER_PATH, the local debug build, or PATH."
+        },
+        "lymalsExtension.server.args": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "markdownDescription": "Additional command-line arguments passed before the extension-appended `--stdio` transport flag."
+        },
+        "lymalsExtension.server.allowUntitled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Also start lymals for untitled Lyma buffers. Disabled by default so the language client only manages file-backed documents."
+        },
+        "lymalsExtension.server.logFile": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional log file path passed to lymals as `--log-file`. Relative values resolve from the workspace folder when available. Changes apply after the language server restarts. In extension development, leaving this empty defaults to a storage-backed log file so server logging never competes with stdio."
+        },
+        "lymalsExtension.server.rustLog": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional `RUST_LOG` value injected into the lymals server process environment. Changes apply after the language server restarts."
+        },
+        "lymalsExtension.server.trace.server": {
+          "type": "string",
+          "default": "off",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "markdownDescription": "Language client protocol tracing level for traffic to and from lymals. Traces are written to Output > Lymals and updated with the client trace controls supported by `vscode-languageclient`/LSP trace notifications."
+        },
+        "lymalsExtension.server.build.command": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional executable used to build lymals before activation. Runs shell-free and only when build-on-activation is enabled in a trusted workspace."
+        },
+        "lymalsExtension.server.build.args": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "markdownDescription": "Arguments for the optional shell-free lymals build command."
+        },
+        "lymalsExtension.server.build.cwd": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional working directory for the lymals build command. Relative values resolve from the workspace folder."
+        },
+        "lymalsExtension.server.buildOnActivation": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "When enabled, runs the optional shell-free lymals build command before giving up on auto-resolution. Trusted workspaces only."
+        },
+        "lymalsExtension.trace.client": {
+          "type": "string",
+          "default": "info",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "markdownDescription": "Extension/client output logging verbosity for Output > Lymals. Changes take effect immediately."
+        },
+        "lymals.diagnostics.enabled": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable parser, validation, and resolver diagnostics from lymals. Default: `true`."
+        },
+        "lymals.formatting.enabled": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable document formatting support from lymals. Default: `true`."
+        },
+        "lymals.imports.enabled": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable import/include resolution features in lymals. Default: `true`."
+        },
+        "lymals.semanticTokens.enabled": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable semantic token classification from lymals. Default: `true`."
+        },
+        "lymals.completion.enabled": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable completion support from lymals. Default: `true`."
+        },
+        "lymals.inlayHints.enabled": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable inlay hints from lymals. Default: `true`."
+        },
+        "lymals.inlayHints.inferredTypes": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Show inferred type inlay hints. Default: `false`."
+        },
+        "lymals.inlayHints.keyPaths": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Show key-path inlay hints. Default: `false`."
+        },
+        "lymals.inlayHints.letBindings": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Show `let` binding inlay hints. Default: `false`."
+        },
+        "lymals.inlayHints.profileEffects": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Show profile/effect inlay hints. Default: `false`."
+        },
+        "lymals.inlayHints.importResolution": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Show import resolution inlay hints. Default: `false`."
+        },
+        "lymals.evaluation.enabled": {
+          "scope": "resource",
+          "restricted": true,
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Reserved future-evaluation flag. In v1, lymals remains parse-only. Untrusted workspaces cannot broaden this beyond the safe default. Default: `false`."
+        },
+        "lymals.logLevel": {
+          "scope": "resource",
+          "type": "string",
+          "default": "info",
+          "enum": [
+            "error",
+            "warn",
+            "info",
+            "debug",
+            "trace"
+          ],
+          "markdownDescription": "Server-side logging verbosity used by lymals. Default: `\"info\"`."
+        },
+        "lymals.parserBackend": {
+          "scope": "resource",
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "fallback",
+            "upstream"
+          ],
+          "markdownDescription": "Parser backend selection for lymals. Default: `\"auto\"`."
+        },
+        "lymals.indexWorkspace": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Index workspace files for cross-file features. Default: `true`."
+        },
+        "lymals.followImportsInIndex": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Follow import/include edges during workspace indexing. Default: `true`."
+        },
+        "lymals.allowedRoots": {
+          "scope": "resource",
+          "restricted": true,
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "markdownDescription": "Additional root URIs permitted for import/include resolution. Untrusted workspaces are forced back to the safe default. Default: `[]`."
+        },
+        "lymals.allowedSchemes": {
+          "scope": "resource",
+          "restricted": true,
+          "type": "array",
+          "default": [
+            "file"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "markdownDescription": "Allowed URI schemes for import/include resolution. Safe default: `[\"file\"]`; untrusted workspaces cannot broaden it."
+        },
+        "lymals.allowAbsoluteFileUris": {
+          "scope": "resource",
+          "restricted": true,
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Allow absolute `file:` URIs outside root-bounded resolution. Untrusted workspaces are forced back to the safe default. Default: `false`."
+        },
+        "lymals.excludeGlobs": {
+          "scope": "resource",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "markdownDescription": "Glob patterns excluded from indexing and related workspace scans. Default: `[]`."
+        },
+        "lymals.maxResolveDepth": {
+          "scope": "resource",
+          "type": "number",
+          "default": 16,
+          "minimum": 0,
+          "markdownDescription": "Maximum recursive import/include resolution depth. Default: `16`."
+        },
+        "lymals.maxResolvedEdgesPerFile": {
+          "scope": "resource",
+          "type": "number",
+          "default": 256,
+          "minimum": 0,
+          "markdownDescription": "Maximum resolved import/include edges per file. Default: `256`."
+        },
+        "lymals.maxIndexedFilesPerWorkspace": {
+          "scope": "resource",
+          "type": "number",
+          "default": 10000,
+          "minimum": 0,
+          "markdownDescription": "Maximum files indexed per workspace. Default: `10000`."
+        },
+        "lymals.maxIndexedFileBytes": {
+          "scope": "resource",
+          "type": "number",
+          "default": 1048576,
+          "minimum": 0,
+          "markdownDescription": "Maximum file size, in bytes, that lymals indexes. Default: `1048576`."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.0.0",
+    "@types/vscode": "^1.97.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.6.0",
+    "glob": "^11.0.3",
+    "mocha": "^11.7.1",
+    "typescript": "^5.8.3"
+  }
+}

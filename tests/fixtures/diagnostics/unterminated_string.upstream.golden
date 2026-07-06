@@ -1,5 +1,5 @@
 count: 2
 - severity=1 code=E0004 source=luma.parser range=0:7-0:20
   message=unterminated string
-- severity=1 code=L015 source=lumals.validation range=0:7-0:20
+- severity=1 code=L015 source=lymals.validation range=0:7-0:20
   message=unterminated string

@@ -1,4 +1,4 @@
-@import "./shared.luma"
+@import "./shared.lyma"
 root:
   child: one
   list:

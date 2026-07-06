@@ -1,6 +1,6 @@
 documents: 2
 document 1:
-- directive @luma
+- directive @lyma
 - directive @import
 - directive @include
 - directive @use
@@ -30,7 +30,7 @@ document 2:
 symbols:
 - directive:@import
 - directive:@include
-- directive:@luma
+- directive:@lyma
 - directive:@meta
 - directive:@use
 - key:description

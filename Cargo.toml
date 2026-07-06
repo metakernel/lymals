@@ -20,6 +20,10 @@ path = "src/main.rs"
 name = "parse_index"
 harness = false
 
+[[test]]
+name = "lsp_binary_stdio_tests"
+path = "tests/lsp_binary_stdio_tests.rs"
+
 [features]
 # v1 stays parse-only by default. Future tasks can layer richer backends behind
 # these flags without changing the non-evaluating default behavior.
@@ -43,7 +47,7 @@ schemars = { version = "0.8", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
-tokio = { version = "1.44", features = ["io-std", "io-util", "macros", "rt-multi-thread", "sync", "time"] }
+tokio = { version = "1.44", features = ["io-std", "io-util", "macros", "process", "rt-multi-thread", "sync", "time"] }
 tower-lsp = "0.20"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "std"] }

@@ -1,5 +1,5 @@
 count: 2
-- severity=1 code=L004 source=lumals.validation range=1:0-1:1
+- severity=1 code=L004 source=lymals.validation range=1:0-1:1
   message=indentation must use multiples of two spaces
-- severity=1 code=L005 source=lumals.validation range=1:0-1:1
+- severity=1 code=L005 source=lymals.validation range=1:0-1:1
   message=invalid indentation increase

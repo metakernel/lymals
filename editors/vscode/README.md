@@ -1,45 +1,62 @@
-# VS Code-compatible clients
+# Lymals VS Code extension scaffold
 
-`lymals` v1 does not ship a VSIX. Use any VS Code-compatible extension that can launch a custom stdio language server, or a local development extension, and point it at the downloaded `lymals` binary.
+This directory contains a local-development VS Code extension scaffold for launching the `lymals` language server over stdio.
 
-## What to configure
+## Status
 
-- command: absolute path to `lymals`/`lymals.exe`
-- args: `--stdio`
-- language id / file association: map `*.lyma` to `lyma`
-- workspace settings section: `lymals`
+- scaffold only; not published
+- VSIX artifacts must remain local-only
+- later tasks will add stronger executable resolution and workspace-trust behavior
 
-Keep logs off stdout; `lymals` reserves stdout for JSON-RPC and writes logs to stderr or `--log-file`.
+## Development
 
-## Example generic client settings
-
-Client launch settings are extension-specific and are **not** part of the server's `lymals` workspace configuration. Use whatever keys your chosen VS Code-compatible client expects for command/args, for example:
-
-```json
-{
-  "<client-specific server path setting>": "/absolute/path/to/lymals",
-  "<client-specific server args setting>": ["--stdio"],
-  "files.associations": {
-    "*.lyma": "lyma"
-  }
-}
+```bash
+npm install
+npm run compile
 ```
 
-If you need a concrete example, keep client-only launch settings under an extension namespace such as `lymalsExtension.server.path` / `lymalsExtension.server.args`, not under `lymals`.
+Use the included `.vscode/launch.json` and `.vscode/tasks.json` to run the extension in an Extension Development Host.
 
-On Windows, use an escaped absolute path such as `"C:\\Tools\\lymals\\lymals.exe"`.
+## Commands
 
-If your client supports passing workspace settings to the server, use the normal `lymals` config section documented in `docs/configuration.md` only for actual server settings, for example:
+The extension contributes these Lymals command-palette actions:
 
-```json
-{
-  "lymals": {
-    "evaluation": { "enabled": false },
-    "allowedSchemes": ["file"]
-  }
-}
-```
+- `Lymals: Restart Language Server`
+- `Lymals: Show Output`
+- `Lymals: Restart Index` — calls server command `lymals.restartIndex` and writes the response to Output > Lymals
+- `Lymals: Show Syntax Tree` — calls `lymals.showSyntaxTree` for the active Lyma editor and opens a read-only preview
+- `Lymals: Show Config` — calls `lymals.showConfig` and opens the returned JSON/text in a read-only preview
+- `Lymals: Format Workspace File Preview` — calls `lymals.formatWorkspaceFile` for the active workspace-backed `.lyma` file and opens the formatted preview without writing to disk
+- `Lymals: Explain Diagnostic` — calls `lymals.explainDiagnostic` using the diagnostic under the cursor when possible, or a manually entered code otherwise
 
-This setup is intentionally docs-only for v1; no editor marketplace package is published.
+Commands that require a URI use the active Lyma editor and fail safely with a VS Code message if no suitable `.lyma` document is active.
 
-Do not publish a VSIX or marketplace release until versioning, licensing, and release artifact checksum validation are completed and the binary-only v1 policy is intentionally changed.
+## Settings
+
+### Server settings (`lymals.*`)
+
+The extension contributes the full documented `lymals` server configuration surface with defaults from `../../docs/configuration.md`:
+
+- feature toggles: `diagnostics.enabled`, `formatting.enabled`, `imports.enabled`, `semanticTokens.enabled`, `completion.enabled`
+- inlay hints: `inlayHints.enabled`, `inlayHints.inferredTypes`, `inlayHints.keyPaths`, `inlayHints.letBindings`, `inlayHints.profileEffects`, `inlayHints.importResolution`
+- evaluation: `evaluation.enabled`
+- runtime/indexing: `logLevel`, `parserBackend`, `indexWorkspace`, `followImportsInIndex`
+- import guardrails: `allowedRoots`, `allowedSchemes`, `allowAbsoluteFileUris`, `excludeGlobs`
+- limits: `maxResolveDepth`, `maxResolvedEdgesPerFile`, `maxIndexedFilesPerWorkspace`, `maxIndexedFileBytes`
+
+High-risk workspace-scoped settings (`allowedRoots`, `allowedSchemes`, `allowAbsoluteFileUris`, `evaluation.enabled`) are marked restricted and are clamped back to documented safe defaults in untrusted workspaces before the extension forwards them to the server. The output channel explains when this happens.
+
+### Extension-only settings (`lymalsExtension.*`)
+
+- `lymalsExtension.server.path`: explicit server executable path; defaults to `lymals` from `PATH`
+- `lymalsExtension.server.args`: extra arguments before the extension-appended `--stdio`
+- `lymalsExtension.server.allowUntitled`: opt in to untitled Lyma buffers
+- `lymalsExtension.server.logFile`: optional `--log-file` path for the server
+- `lymalsExtension.server.rustLog`: optional `RUST_LOG` value for the server process
+- `lymalsExtension.server.trace.server`: LSP trace level
+- `lymalsExtension.server.build.command|args|cwd|buildOnActivation`: optional trusted build-on-activation flow
+- `lymalsExtension.trace.client`: extension output verbosity
+
+## License
+
+See the repository license at `../../LICENSE.md`.
