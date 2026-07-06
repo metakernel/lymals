@@ -2,7 +2,7 @@
   "name": "lymals-vscode",
   "displayName": "Lyma",
   "description": "VS Code language support for Lyma via the lymals language server.",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "publisher": "local-dev",
   "private": true,
   "license": "MIT",
@@ -135,7 +135,7 @@
           "items": {
             "type": "string"
           },
-          "markdownDescription": "Additional command-line arguments passed before the extension-appended `--stdio` transport flag."
+          "markdownDescription": "Additional command-line arguments passed to lymals before VS Code attaches the stdio transport."
         },
         "lymalsExtension.server.allowUntitled": {
           "type": "boolean",
@@ -379,7 +379,9 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
     "test": "node ./out/test/runTest.js",
-    "package": "vsce package --no-dependencies"
+    "prepackage": "npm run compile",
+    "package": "vsce package --no-dependencies",
+    "package:contents": "vsce ls --tree --no-dependencies"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"

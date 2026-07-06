@@ -11,3 +11,16 @@
 *.pending-snap*
 
 /.task
+
+# VS Code extension / Node-generated artifacts
+/editors/vscode/node_modules/
+/editors/vscode/out/
+/editors/vscode/*.vsix
+/editors/vscode/.vscode-test/
+/editors/vscode/coverage/
+/editors/vscode/*.lcov
+/editors/vscode/*.log
+/editors/vscode/npm-debug.log*
+/editors/vscode/yarn-debug.log*
+/editors/vscode/yarn-error.log*
+/editors/vscode/pnpm-debug.log*

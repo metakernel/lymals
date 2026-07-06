@@ -30,7 +30,7 @@ export async function resolveServerExecutable(
 ): Promise<Executable> {
   const dependencies = withDefaultOptions(options);
   const baseExecutable = {
-    args: ensureStdioArgs(config.serverArgs),
+    args: [...config.serverArgs],
     options: {},
   } satisfies Omit<Executable, 'command'>;
 
@@ -106,10 +106,6 @@ export async function resolveServerExecutable(
 
     throw error;
   }
-}
-
-function ensureStdioArgs(args: string[]): string[] {
-  return args.includes('--stdio') ? [...args] : [...args, '--stdio'];
 }
 
 async function resolveConfiguredServerPath(

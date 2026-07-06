@@ -19,7 +19,7 @@ suite('serverResolver', () => {
     });
 
     assert.equal(executable.command, 'C:\\tools\\lymals.exe');
-    assert.deepEqual(executable.args, ['--stdio']);
+    assert.deepEqual(executable.args, []);
     assert.deepEqual(calls, [{ command: 'C:\\tools\\lymals.exe', args: ['--version'] }]);
   });
 
@@ -64,8 +64,26 @@ suite('serverResolver', () => {
     });
 
     assert.equal(executable.command, 'lymals');
-    assert.deepEqual(executable.args, ['--log-level', 'debug', '--stdio']);
+    assert.deepEqual(executable.args, ['--log-level', 'debug']);
     assert.deepEqual(calls, [{ command: 'lymals', args: ['--version'] }]);
+  });
+
+  test('prefers LYMALS_SERVER_PATH over repository and PATH fallbacks', async () => {
+    const calls: Array<{ command: string; args: readonly string[] }> = [];
+
+    const executable = await resolveServerExecutable(createConfig({ serverArgs: ['--log-level', 'debug'] }), {
+      environment: { LYMALS_SERVER_PATH: '/opt/custom/lymals' },
+      platform: 'linux',
+      pathExists: async () => false,
+      probeExecutable: async (command, args) => {
+        calls.push({ command, args });
+        return 'lymals 3.4.5';
+      },
+    });
+
+    assert.equal(executable.command, '/opt/custom/lymals');
+    assert.deepEqual(executable.args, ['--log-level', 'debug']);
+    assert.deepEqual(calls, [{ command: '/opt/custom/lymals', args: ['--version'] }]);
   });
 
   test('rejects binaries whose version output is not from lymals', async () => {

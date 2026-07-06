@@ -97,7 +97,18 @@ cargo test --all-features
 cargo doc --workspace --all-features --no-deps
 ```
 
-Dependency rationale and workflows are in [`docs/development.md`](docs/development.md). Upstream parser strategy is documented in [`docs/upstream-lyma.md`](docs/upstream-lyma.md).
+For the VS Code extension developer loop:
+
+```text
+cargo build
+# then in editors/vscode
+npm install
+npm run compile    # or: npm run watch
+```
+
+Open `editors/vscode` in VS Code, set `lymalsExtension.server.path` to `../../target/debug/lymals.exe` on Windows or `../../target/debug/lymals` on macOS/Linux, then press `F5` to launch an Extension Development Host. Open **Output > Lymals** for client/LSP logs; use `lymalsExtension.server.logFile` and `lymalsExtension.server.rustLog` when you need server-side logging.
+
+Dependency rationale and workflows are in [`docs/development.md`](docs/development.md). VS Code-specific setup notes are in [`editors/vscode/README.md`](editors/vscode/README.md). Upstream parser strategy is documented in [`docs/upstream-lyma.md`](docs/upstream-lyma.md).
 
 ## Contributing
 

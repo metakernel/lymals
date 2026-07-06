@@ -1,0 +1,21 @@
+---
+@lyma 1
+@meta owner=manual-test
+# Manual VS Code sample for the Extension Development Host.
+# - Hover `env`, `banner`, or `release`.
+# - Trigger completion by typing one of: @ ? * = | ${
+# - Run Format Document or Lymals: Show Syntax Tree.
+# - Semantic tokens should color directives, `let`, control lines, tags, lua, and interpolations.
+let env = ${mode}
+title:   "VS Code sample"
+summary: >
+  Open this file in the Extension Development Host.
+  Then check Problems, hover values, try completion, and run a Lymals command.
+release: =env
+script: lua{ return env }
+?if env == "prod"
+banner: !Notice ${env}
+?else
+banner: !Notice "dev"
+let broken
+...

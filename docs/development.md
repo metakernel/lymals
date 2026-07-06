@@ -38,6 +38,80 @@ cargo deny check
 
 Use `UPDATE_GOLDENS=1 cargo test --test parser_tests` only when intentionally refreshing parser golden fixtures.
 
+## VS Code extension workflow
+
+The VS Code extension lives under `editors/vscode` and launches the repository's local `lymals` binary over stdio.
+
+### One-time setup
+
+From the repo root:
+
+```text
+cargo build
+```
+
+From `editors/vscode`:
+
+```text
+npm install
+npm run compile
+```
+
+Use `npm run watch` instead of repeated `npm run compile` during active extension work.
+
+### Launch and verify in under 10 minutes
+
+1. Open `editors/vscode` in VS Code.
+2. Set `lymalsExtension.server.path` to the local debug binary:
+   - Windows: `../../target/debug/lymals.exe`
+   - macOS/Linux: `../../target/debug/lymals`
+3. Press `F5` to start the Extension Development Host.
+4. In the new window, open a sample `.lyma` file such as `../../tests/fixtures/diagnostics/syntax_error.lyma`.
+5. Confirm Lyma diagnostics appear in Problems.
+6. Open **Output > Lymals** to inspect extension logs, startup messages, and optional protocol trace output.
+
+### Debugging tips
+
+- `lymalsExtension.server.logFile` adds `--log-file` to the server command.
+- `lymalsExtension.server.rustLog` sets `RUST_LOG` for the spawned server process.
+- In Extension Development mode, leaving `lymalsExtension.server.logFile` empty uses a storage-backed default log file; the resolved path is announced in **Output > Lymals**.
+- `lymalsExtension.server.trace.server` is the quickest way to inspect raw LSP traffic.
+
+The root `Taskfile.yml` also contains a `vsix` helper for local packaging experiments, but that `.vsix` remains a development-only artifact and must not be described or treated as publishable in v1.
+
+### Local packaging workflow (`editors/vscode` only)
+
+Package the extension locally from `editors/vscode`:
+
+```text
+npm run package
+```
+
+That workflow is intentionally limited to producing a local `.vsix` build artifact. It does **not** publish, upload, or release anything to the VS Code Marketplace, Open VSX, or GitHub Releases.
+
+Before considering a `.vsix` shareable even for internal review, inspect the exact contents:
+
+```text
+npm run package:contents
+```
+
+Equivalent direct command:
+
+```text
+vsce ls --tree --no-dependencies
+```
+
+Review that listing and confirm it excludes tests, `node_modules`, Rust `target` output, logs, and any secrets or local-only files.
+
+Packaging notes:
+
+- Default recommendation: do **not** bundle platform-specific `lymals` binaries in the first VS Code packaging PR.
+- Preferred development flow: point the extension at a user-configured binary path or a `lymals` binary already available on `PATH`.
+- If a future binary-bundling strategy is approved, run `cargo build --release` first and make any binary copy/embed step explicit, documented, and reviewable.
+- Keep `editors/vscode/package.json`'s extension version aligned with the Rust crate version in `Cargo.toml`.
+
+Marketplace/Open VSX prerequisites are intentionally out of scope here. Publisher ownership, versioning policy, licensing review, and release-artifact validation must be completed separately and approved by a maintainer before any future manual publish decision.
+
 ## Contribution workflow
 
 - Keep changes aligned with the v1 contract: release only raw `lymals` binaries/checksums, keep editor integration docs-only, and do not add Lua execution paths to shipped features.
